@@ -1,0 +1,438 @@
+[2026-05-24T21:00:59.596Z] [INFO] - [RAM - Start] Node Process: 115 MB
+[2026-05-24T21:00:59.602Z] [INFO] - Initializing Playwright browser...
+[2026-05-24T21:00:59.723Z] [ERROR] - Error during comment extraction: browserType.launch: Executable doesn't exist at /root/.cache/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-linux64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+[2026-05-25T18:45:07.010Z] [INFO] - [RAM - Start] Node Process: 111 MB
+[2026-05-25T18:45:07.013Z] [INFO] - Initializing Playwright browser...
+[2026-05-25T18:45:08.511Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026
+[2026-05-25T18:45:14.353Z] [INFO] - [RAM - After Page Load] Node Process: 116 MB
+[2026-05-25T18:45:14.354Z] [INFO] - Extracting up to 10 comments...
+[2026-05-25T18:45:14.703Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T18:45:15.022Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T18:45:17.658Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T18:45:17.670Z] [INFO] - Sending 10 comments to AI model for sentiment analysis...
+[2026-05-25T18:45:32.545Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T18:45:32.546Z] [INFO] - [RAM - End] Node Process: 116 MB
+[2026-05-25T18:45:32.779Z] [INFO] - Browser closed.
+[2026-05-25T18:46:37.393Z] [INFO] - [RAM - Start] Node Process: 116 MB
+[2026-05-25T18:46:37.394Z] [INFO] - Initializing Playwright browser...
+[2026-05-25T18:46:37.943Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026
+[2026-05-25T18:46:38.671Z] [INFO] - [RAM - After Page Load] Node Process: 118 MB
+[2026-05-25T18:46:38.671Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T18:46:39.106Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T18:46:39.350Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T18:46:39.912Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T18:46:39.966Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T18:46:40.412Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T18:46:40.413Z] [INFO] - Sending 30 comments to AI model for sentiment analysis...
+[2026-05-25T18:46:57.771Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T18:46:57.772Z] [INFO] - [RAM - End] Node Process: 121 MB
+[2026-05-25T18:46:57.964Z] [INFO] - Browser closed.
+[2026-05-25T19:12:11.629Z] [INFO] - [RAM - Start] Node Process: 120 MB
+[2026-05-25T19:12:11.630Z] [INFO] - Initializing Playwright browser...
+[2026-05-25T19:12:12.378Z] [INFO] - Navigating to URL: https://digimoviez44.top/wuthering-heights-2026/
+[2026-05-25T19:12:15.447Z] [INFO] - [RAM - After Page Load] Node Process: 122 MB
+[2026-05-25T19:12:15.448Z] [INFO] - Extracting up to 20 comments...
+[2026-05-25T19:12:15.915Z] [INFO] - Extracted 4 new comments. Total: 4
+[2026-05-25T19:12:16.139Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:12:18.233Z] [INFO] - Extracted 19 new comments. Total: 23
+[2026-05-25T19:12:18.234Z] [INFO] - Sending 20 comments to AI model for sentiment analysis...
+[2026-05-25T19:12:28.871Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:12:28.872Z] [INFO] - [RAM - End] Node Process: 120 MB
+[2026-05-25T19:12:29.028Z] [INFO] - Browser closed.
+[2026-05-25T19:50:22.141Z] [INFO] - [RAM - Start] Node Process: 112 MB
+[2026-05-25T19:50:22.144Z] [INFO] - Initializing global Playwright browser instance...
+[2026-05-25T19:50:22.753Z] [INFO] - Navigating to URL: https://digimoviez44.top/the-drama-2026/
+[2026-05-25T19:50:23.559Z] [INFO] - [RAM - After Page Load] Node Process: 115 MB
+[2026-05-25T19:50:23.560Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T19:50:23.828Z] [INFO] - Extracted 16 new comments. Total: 16
+[2026-05-25T19:50:24.116Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:50:24.689Z] [INFO] - Extracted 16 new comments. Total: 32
+[2026-05-25T19:50:24.690Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T19:50:39.038Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:50:39.039Z] [INFO] - [RAM - End] Node Process: 119 MB
+[2026-05-25T19:50:39.089Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T19:52:00.794Z] [INFO] - [RAM - Start] Node Process: 117 MB
+[2026-05-25T19:52:00.955Z] [INFO] - Navigating to URL: https://digimoviez44.top/the-drama-2026/
+[2026-05-25T19:52:01.511Z] [INFO] - [RAM - After Page Load] Node Process: 118 MB
+[2026-05-25T19:52:01.512Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T19:52:01.825Z] [INFO] - Extracted 16 new comments. Total: 16
+[2026-05-25T19:52:02.083Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:52:02.766Z] [INFO] - Extracted 16 new comments. Total: 32
+[2026-05-25T19:52:02.767Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T19:52:16.225Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:52:16.225Z] [INFO] - [RAM - End] Node Process: 120 MB
+[2026-05-25T19:52:16.246Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T19:52:55.314Z] [INFO] - [RAM - Start] Node Process: 120 MB
+[2026-05-25T19:52:55.487Z] [INFO] - Navigating to URL: https://digimoviez44.top/hoppers-2026/
+[2026-05-25T19:52:56.466Z] [INFO] - [RAM - After Page Load] Node Process: 120 MB
+[2026-05-25T19:52:56.466Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T19:52:56.703Z] [INFO] - Extracted 3 new comments. Total: 3
+[2026-05-25T19:52:56.945Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:52:57.591Z] [INFO] - Extracted 17 new comments. Total: 20
+[2026-05-25T19:52:57.647Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:52:58.460Z] [INFO] - Extracted 16 new comments. Total: 36
+[2026-05-25T19:52:58.461Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T19:53:07.839Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:53:07.839Z] [INFO] - [RAM - End] Node Process: 120 MB
+[2026-05-25T19:53:07.863Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T19:53:14.236Z] [INFO] - [RAM - Start] Node Process: 120 MB
+[2026-05-25T19:53:14.402Z] [INFO] - Navigating to URL: https://digimoviez44.top/hoppers-2026/
+[2026-05-25T19:53:15.099Z] [INFO] - [RAM - After Page Load] Node Process: 120 MB
+[2026-05-25T19:53:15.100Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T19:53:15.327Z] [INFO] - Extracted 3 new comments. Total: 3
+[2026-05-25T19:53:15.607Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:53:16.226Z] [INFO] - Extracted 17 new comments. Total: 20
+[2026-05-25T19:53:16.278Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:53:16.731Z] [INFO] - Extracted 16 new comments. Total: 36
+[2026-05-25T19:53:16.736Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T19:53:26.927Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:53:26.930Z] [INFO] - [RAM - End] Node Process: 121 MB
+[2026-05-25T19:53:26.956Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T19:57:50.082Z] [INFO] - [RAM - Start] Node Process: 121 MB
+[2026-05-25T19:57:50.262Z] [INFO] - Navigating to URL: https://digimoviez44.top/hoppers-2026/
+[2026-05-25T19:57:51.101Z] [INFO] - [RAM - After Page Load] Node Process: 121 MB
+[2026-05-25T19:57:51.101Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T19:57:51.307Z] [INFO] - Extracted 3 new comments. Total: 3
+[2026-05-25T19:57:51.562Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:57:52.070Z] [INFO] - Extracted 17 new comments. Total: 20
+[2026-05-25T19:57:52.129Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T19:57:52.578Z] [INFO] - Extracted 16 new comments. Total: 36
+[2026-05-25T19:57:52.579Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T19:58:02.634Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T19:58:02.635Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T19:58:02.668Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:21:49.952Z] [INFO] - [RAM - Start] Node Process: 124 MB
+[2026-05-25T20:21:50.132Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:21:50.783Z] [INFO] - [RAM - After Page Load] Node Process: 126 MB
+[2026-05-25T20:21:50.786Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:21:51.027Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:21:51.311Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:21:51.822Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:21:51.875Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:21:52.272Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:21:52.272Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:22:02.008Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:22:02.008Z] [INFO] - [RAM - End] Node Process: 125 MB
+[2026-05-25T20:22:02.038Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:22:07.293Z] [INFO] - [RAM - Start] Node Process: 124 MB
+[2026-05-25T20:22:07.486Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:22:08.294Z] [INFO] - [RAM - After Page Load] Node Process: 127 MB
+[2026-05-25T20:22:08.294Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:22:08.511Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:22:08.851Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:09.319Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:22:09.368Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:09.979Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:22:09.979Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:22:19.430Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:22:19.431Z] [INFO] - [RAM - End] Node Process: 126 MB
+[2026-05-25T20:22:19.459Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:22:24.164Z] [INFO] - [RAM - Start] Node Process: 126 MB
+[2026-05-25T20:22:24.349Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:22:24.978Z] [INFO] - [RAM - After Page Load] Node Process: 128 MB
+[2026-05-25T20:22:24.979Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:22:25.180Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:22:25.589Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:26.212Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:22:26.253Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:26.685Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:22:26.685Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:22:35.581Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:22:35.582Z] [INFO] - [RAM - End] Node Process: 127 MB
+[2026-05-25T20:22:35.611Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:22:56.396Z] [INFO] - [RAM - Start] Node Process: 127 MB
+[2026-05-25T20:22:56.594Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:22:57.180Z] [INFO] - [RAM - After Page Load] Node Process: 129 MB
+[2026-05-25T20:22:57.180Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:22:57.336Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:22:57.627Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:58.087Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:22:58.151Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:22:58.594Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:22:58.596Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:23:07.401Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:23:07.402Z] [INFO] - [RAM - End] Node Process: 127 MB
+[2026-05-25T20:23:07.421Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:23:11.185Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:23:11.358Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:23:12.266Z] [INFO] - [RAM - After Page Load] Node Process: 130 MB
+[2026-05-25T20:23:12.267Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:23:12.598Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:23:12.796Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:23:13.316Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:23:13.368Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:23:13.941Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:23:13.941Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:23:22.549Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:23:22.549Z] [INFO] - [RAM - End] Node Process: 131 MB
+[2026-05-25T20:23:22.570Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:41:52.789Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:41:53.016Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:42:02.044Z] [INFO] - [RAM - After Page Load] Node Process: 128 MB
+[2026-05-25T20:42:02.044Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:42:02.405Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:42:02.704Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:42:06.218Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:42:06.272Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:42:09.273Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:42:09.275Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:42:18.454Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:42:18.455Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T20:42:18.480Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:44:39.509Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:44:39.742Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:44:40.375Z] [INFO] - [RAM - After Page Load] Node Process: 130 MB
+[2026-05-25T20:44:40.376Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:44:40.681Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:44:40.982Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:44:41.578Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:44:41.646Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:44:42.194Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:44:42.209Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:44:52.032Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:44:52.033Z] [INFO] - [RAM - End] Node Process: 127 MB
+[2026-05-25T20:44:52.062Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:44:58.680Z] [INFO] - [RAM - Start] Node Process: 127 MB
+[2026-05-25T20:44:58.865Z] [INFO] - Navigating to URL: https://digimoviez44.top/crime-101/
+[2026-05-25T20:45:11.219Z] [INFO] - [RAM - After Page Load] Node Process: 127 MB
+[2026-05-25T20:45:11.220Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:45:11.576Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-25T20:45:11.883Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:45:19.137Z] [INFO] - Extracted 18 new comments. Total: 25
+[2026-05-25T20:45:19.213Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:45:20.538Z] [INFO] - Extracted 15 new comments. Total: 40
+[2026-05-25T20:45:20.538Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:45:31.053Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:45:31.053Z] [INFO] - [RAM - End] Node Process: 127 MB
+[2026-05-25T20:45:31.096Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:47:25.861Z] [INFO] - [RAM - Start] Node Process: 127 MB
+[2026-05-25T20:47:25.869Z] [INFO] - [RAM - Start] Node Process: 127 MB
+[2026-05-25T20:47:26.086Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:47:26.106Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:47:26.456Z] [INFO] - [RAM - Start] Node Process: 129 MB
+[2026-05-25T20:47:26.789Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:47:27.211Z] [INFO] - [RAM - After Page Load] Node Process: 131 MB
+[2026-05-25T20:47:27.211Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:47:27.474Z] [INFO] - [RAM - Start] Node Process: 132 MB
+[2026-05-25T20:47:27.476Z] [INFO] - [RAM - After Page Load] Node Process: 132 MB
+[2026-05-25T20:47:27.476Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:47:27.501Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:47:27.706Z] [INFO] - [RAM - After Page Load] Node Process: 133 MB
+[2026-05-25T20:47:27.707Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:47:27.822Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:47:27.870Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:47:27.973Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:28.178Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:47:28.400Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:28.852Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:28.969Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:47:29.007Z] [INFO] - [RAM - After Page Load] Node Process: 135 MB
+[2026-05-25T20:47:29.008Z] [INFO] - Extracting up to 31 comments...
+[2026-05-25T20:47:29.130Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:29.470Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:47:29.515Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:47:29.620Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:47:29.728Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:29.779Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:47:29.780Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:47:29.845Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:30.160Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:30.831Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:47:30.842Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:47:31.158Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:47:31.158Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:47:31.316Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:47:31.493Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:47:32.277Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:47:32.281Z] [INFO] - Sending 31 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:47:51.502Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:47:51.509Z] [INFO] - [RAM - End] Node Process: 129 MB
+[2026-05-25T20:47:51.659Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:48:35.231Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:48:35.837Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:48:36.476Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:48:36.476Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T20:48:36.495Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:48:36.499Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T20:48:36.703Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:48:36.715Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:48:37.999Z] [INFO] - [RAM - After Page Load] Node Process: 130 MB
+[2026-05-25T20:48:38.000Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:48:38.385Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:48:38.808Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:48:39.544Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:48:39.642Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:48:40.183Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:48:40.184Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:48:50.624Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:48:50.627Z] [INFO] - [RAM - End] Node Process: 129 MB
+[2026-05-25T20:48:50.717Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:49:06.080Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:49:06.082Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T20:49:06.113Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:51:45.108Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:51:45.293Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:51:45.946Z] [INFO] - [RAM - After Page Load] Node Process: 130 MB
+[2026-05-25T20:51:45.950Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:51:46.288Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:51:46.622Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:51:47.214Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:51:47.273Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:51:47.775Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:51:47.778Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:52:02.271Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:52:02.272Z] [INFO] - [RAM - End] Node Process: 128 MB
+[2026-05-25T20:52:02.311Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:52:07.415Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-25T20:52:07.608Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:52:08.299Z] [INFO] - [RAM - After Page Load] Node Process: 131 MB
+[2026-05-25T20:52:08.303Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:52:08.544Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:52:08.847Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:52:09.438Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:52:09.497Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:52:09.971Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:52:09.975Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:52:25.527Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:52:25.528Z] [INFO] - [RAM - End] Node Process: 129 MB
+[2026-05-25T20:52:25.553Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:52:28.174Z] [INFO] - [RAM - Start] Node Process: 129 MB
+[2026-05-25T20:52:28.310Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:52:56.795Z] [INFO] - [RAM - After Page Load] Node Process: 131 MB
+[2026-05-25T20:52:56.796Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:52:57.193Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:52:57.501Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:53:12.772Z] [WARN] - Server is too slow or no new comments loaded. Stopping scraper...
+[2026-05-25T20:53:12.772Z] [INFO] - Sending 5 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:53:14.514Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:53:14.514Z] [INFO] - [RAM - End] Node Process: 131 MB
+[2026-05-25T20:53:14.557Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:55:00.660Z] [INFO] - [RAM - Start] Node Process: 132 MB
+[2026-05-25T20:55:00.853Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-25T20:55:01.384Z] [INFO] - [RAM - After Page Load] Node Process: 132 MB
+[2026-05-25T20:55:01.385Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:55:01.836Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-25T20:55:02.114Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:55:02.991Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-25T20:55:03.059Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:55:10.029Z] [INFO] - Extracted 17 new comments. Total: 38
+[2026-05-25T20:55:10.030Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:55:24.461Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:55:24.462Z] [INFO] - [RAM - End] Node Process: 133 MB
+[2026-05-25T20:55:24.489Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-25T20:56:17.455Z] [INFO] - [RAM - Start] Node Process: 133 MB
+[2026-05-25T20:56:17.660Z] [INFO] - Navigating to URL: https://digimoviez44.top/the-drama-2026/
+[2026-05-25T20:56:18.357Z] [INFO] - [RAM - After Page Load] Node Process: 135 MB
+[2026-05-25T20:56:18.358Z] [INFO] - Extracting up to 30 comments...
+[2026-05-25T20:56:18.732Z] [INFO] - Extracted 16 new comments. Total: 16
+[2026-05-25T20:56:19.050Z] [INFO] - Clicking "Load More" button...
+[2026-05-25T20:56:19.693Z] [INFO] - Extracted 16 new comments. Total: 32
+[2026-05-25T20:56:19.697Z] [INFO] - Sending 30 comments to AI model for parallel sentiment analysis...
+[2026-05-25T20:56:36.241Z] [INFO] - Sentiment analysis completed!
+[2026-05-25T20:56:36.243Z] [INFO] - [RAM - End] Node Process: 135 MB
+[2026-05-25T20:56:36.262Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T05:23:16.397Z] [INFO] - [RAM - Start] Node Process: 124 MB
+[2026-05-26T05:23:16.608Z] [INFO] - Navigating to URL: https://digimoviez44.top/how-to-train-your-dragon-2025/
+[2026-05-26T05:23:17.608Z] [INFO] - [RAM - After Page Load] Node Process: 126 MB
+[2026-05-26T05:23:17.614Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T05:23:17.749Z] [INFO] - Extracted 17 new comments. Total: 17
+[2026-05-26T05:23:18.082Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T05:23:18.597Z] [INFO] - Extracted 15 new comments. Total: 32
+[2026-05-26T05:23:18.598Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T05:23:22.126Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T05:23:22.127Z] [INFO] - [RAM - End] Node Process: 129 MB
+[2026-05-26T05:23:22.144Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T05:51:04.797Z] [INFO] - [RAM - Start] Node Process: 126 MB
+[2026-05-26T05:51:04.937Z] [INFO] - Navigating to URL: https://digimoviez44.top/how-to-train-your-dragon-2025
+[2026-05-26T05:51:05.769Z] [INFO] - [RAM - After Page Load] Node Process: 127 MB
+[2026-05-26T05:51:05.770Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T05:51:05.951Z] [INFO] - Extracted 17 new comments. Total: 17
+[2026-05-26T05:51:06.222Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T05:51:06.696Z] [INFO] - Extracted 15 new comments. Total: 32
+[2026-05-26T05:51:06.702Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T05:51:09.944Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T05:51:09.945Z] [INFO] - [RAM - End] Node Process: 131 MB
+[2026-05-26T05:51:09.968Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T05:59:59.553Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-26T05:59:59.708Z] [INFO] - Navigating to URL: https://digimoviez44.top/how-to-train-your-dragon-2025
+[2026-05-26T06:00:00.394Z] [INFO] - [RAM - After Page Load] Node Process: 130 MB
+[2026-05-26T06:00:00.394Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T06:00:00.526Z] [INFO] - Extracted 17 new comments. Total: 17
+[2026-05-26T06:00:00.724Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T06:00:01.420Z] [INFO] - Extracted 15 new comments. Total: 32
+[2026-05-26T06:00:01.421Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T06:00:04.016Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T06:00:04.017Z] [INFO] - [RAM - End] Node Process: 129 MB
+[2026-05-26T06:00:04.036Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T08:05:28.064Z] [INFO] - [RAM - Start] Node Process: 127 MB
+[2026-05-26T08:05:28.241Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-26T08:05:33.918Z] [INFO] - [RAM - After Page Load] Node Process: 128 MB
+[2026-05-26T08:05:33.919Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T08:05:34.224Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-26T08:05:34.485Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T08:05:34.998Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-26T08:05:34.998Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T08:05:40.742Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T08:05:40.743Z] [INFO] - [RAM - End] Node Process: 131 MB
+[2026-05-26T08:05:40.766Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T08:05:53.144Z] [INFO] - [RAM - Start] Node Process: 128 MB
+[2026-05-26T08:05:53.319Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-hail-mary-2026/
+[2026-05-26T08:05:54.109Z] [INFO] - [RAM - After Page Load] Node Process: 129 MB
+[2026-05-26T08:05:54.109Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T08:05:54.376Z] [INFO] - Extracted 5 new comments. Total: 5
+[2026-05-26T08:05:54.625Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T08:05:55.183Z] [INFO] - Extracted 16 new comments. Total: 21
+[2026-05-26T08:05:55.187Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T08:06:00.472Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T08:06:00.474Z] [INFO] - [RAM - End] Node Process: 131 MB
+[2026-05-26T08:06:00.500Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T17:10:34.857Z] [INFO] - [RAM - Start] Node Process: 111 MB
+[2026-05-26T17:10:34.862Z] [INFO] - Initializing global Playwright browser instance...
+[2026-05-26T17:10:37.369Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-y-2026/
+[2026-05-26T17:10:38.829Z] [INFO] - [RAM - After Page Load] Node Process: 113 MB
+[2026-05-26T17:10:38.831Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T17:10:39.695Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-26T17:10:39.900Z] [INFO] - Sending 7 comments to AI model for parallel sentiment analysis...
+[2026-05-26T17:10:48.632Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T17:10:48.633Z] [INFO] - [RAM - End] Node Process: 115 MB
+[2026-05-26T17:10:48.688Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T17:12:01.068Z] [INFO] - [RAM - Start] Node Process: 116 MB
+[2026-05-26T17:12:01.242Z] [INFO] - Navigating to URL: https://digimoviez44.top/mercy-2026/
+[2026-05-26T17:12:01.803Z] [INFO] - [RAM - After Page Load] Node Process: 116 MB
+[2026-05-26T17:12:01.804Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T17:12:02.042Z] [INFO] - Extracted 6 new comments. Total: 6
+[2026-05-26T17:12:02.285Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T17:12:02.857Z] [INFO] - Extracted 16 new comments. Total: 22
+[2026-05-26T17:12:02.860Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T17:12:09.483Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T17:12:09.484Z] [INFO] - [RAM - End] Node Process: 119 MB
+[2026-05-26T17:12:09.517Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T17:12:33.499Z] [INFO] - [RAM - Start] Node Process: 118 MB
+[2026-05-26T17:12:33.676Z] [INFO] - Navigating to URL: https://digimoviez44.top/mercy-2026/
+[2026-05-26T17:12:34.408Z] [INFO] - [RAM - After Page Load] Node Process: 119 MB
+[2026-05-26T17:12:34.408Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T17:12:34.541Z] [INFO] - Extracted 6 new comments. Total: 6
+[2026-05-26T17:12:34.818Z] [INFO] - Clicking "Load More" button...
+[2026-05-26T17:12:35.369Z] [INFO] - Extracted 16 new comments. Total: 22
+[2026-05-26T17:12:35.372Z] [INFO] - Sending 20 comments to AI model for parallel sentiment analysis...
+[2026-05-26T17:12:41.912Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T17:12:41.913Z] [INFO] - [RAM - End] Node Process: 120 MB
+[2026-05-26T17:12:41.933Z] [INFO] - Context closed. Global browser remains active.
+[2026-05-26T18:12:39.495Z] [INFO] - [RAM - Start] Node Process: 53 MB
+[2026-05-26T18:12:39.497Z] [INFO] - Initializing global Playwright browser instance...
+[2026-05-26T18:12:40.239Z] [INFO] - Navigating to URL: https://digimoviez44.top/project-y-2026/
+[2026-05-26T18:12:41.064Z] [INFO] - [RAM - After Page Load] Node Process: 55 MB
+[2026-05-26T18:12:41.065Z] [INFO] - Extracting up to 20 comments...
+[2026-05-26T18:12:41.115Z] [INFO] - Extracted 7 new comments. Total: 7
+[2026-05-26T18:12:41.158Z] [INFO] - Sending 7 comments to AI model for parallel sentiment analysis...
+[2026-05-26T18:12:45.532Z] [INFO] - Sentiment analysis completed!
+[2026-05-26T18:12:45.533Z] [INFO] - [RAM - End] Node Process: 57 MB
+[2026-05-26T18:12:45.566Z] [INFO] - Context closed. Global browser remains active.
