@@ -6,9 +6,11 @@ import { validateDigiMoviezUrl } from "../lib/digimoviez.js";
 const originalFetch = globalThis.fetch;
 const originalToken = process.env.TMDB_READ_ACCESS_TOKEN;
 const originalYoutube = process.env.YOUTUBE_API_KEY;
+const originalScraperCode = process.env.CINESENSE_SCRAPER_ACCESS_CODE;
 test.before(() => {
   process.env.TMDB_READ_ACCESS_TOKEN = "unit-test-token";
   process.env.YOUTUBE_API_KEY = "unit-test-youtube";
+  process.env.CINESENSE_SCRAPER_ACCESS_CODE = "unit-test-code-value-with-strong-length";
   globalThis.fetch = async url => {
     const parsed = new URL(url);
     if (parsed.pathname.endsWith("/search/movie"))
@@ -28,6 +30,8 @@ test.before(() => {
 });
 test.after(() => {
   globalThis.fetch = originalFetch;
+  if (originalScraperCode === undefined) delete process.env.CINESENSE_SCRAPER_ACCESS_CODE;
+  else process.env.CINESENSE_SCRAPER_ACCESS_CODE = originalScraperCode;
   if (originalToken === undefined) delete process.env.TMDB_READ_ACCESS_TOKEN;
   else process.env.TMDB_READ_ACCESS_TOKEN = originalToken;
   if (originalYoutube === undefined) delete process.env.YOUTUBE_API_KEY;
