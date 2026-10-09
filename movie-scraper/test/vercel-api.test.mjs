@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { available, searchMovies, analyzeMovie } from "../lib/vercel-api.js";
+import { validateDigiMoviezUrl } from "../lib/digimoviez.js";
 
 const originalFetch = globalThis.fetch;
 const originalToken = process.env.TMDB_READ_ACCESS_TOKEN;
@@ -34,7 +35,7 @@ test.after(() => {
 });
 test("provider flags and movie lookup are available with configured secrets", async () => {
   assert.equal(available().tmdb.enabled, true);
-  assert.equal(available().digimoviez.enabled, false);
+  assert.equal(available().digimoviez.enabled, true);
   const matches = await searchMovies("Interstellar");
   assert.equal(matches[0].id, 157336);
 });
@@ -57,4 +58,11 @@ test("invalid and scraper requests are rejected without upstream calls", async (
   await assert.rejects(analyzeMovie({ sources: ["digimoviez"], digimoviezUrl: "http://127.0.0.1" }));
   await assert.rejects(analyzeMovie({ sources: ["tmdb"], tmdbId: 157336, maxComments: 10000 }));
   await assert.rejects(searchMovies("a"));
+});
+
+test("serverless scraper rejects arbitrary hosts and insecure URL schemes", () => {
+  assert.equal(validateDigiMoviezUrl("https://digimoviez44.top/sample/"),"https://digimoviez44.top/sample/");
+  for(const url of ["http://digimoviez44.top/", "https://localhost/", "https://example.com/", "https://digimoviez44.top.evil.com/", "file:///etc/passwd"]) {
+    assert.throws(()=>validateDigiMoviezUrl(url));
+  }
 });
