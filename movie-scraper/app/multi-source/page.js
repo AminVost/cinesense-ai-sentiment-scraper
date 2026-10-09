@@ -1,12 +1,36 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import {
-  Alert, Autocomplete, Box, Button, Card, CardContent, Checkbox, Chip,
-  Container, FormControlLabel, LinearProgress, TextField, Typography
-} from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Autocomplete, TextField } from "@mui/material";
+import "./cinesense-v2.css";
 
 const LABELS = { tmdb: "TMDB", youtube: "YouTube (تریلر)", digimoviez: "DigiMoviez (آزمایشی)" };
 const LABEL_FA = {Positive:"مثبت",Negative:"منفی",Neutral:"خنثی",Unclassified:"نامشخص"};
+const SOURCES = [{id:"tmdb",name:"TMDB",desc:"نقدهای فیلم",tone:"#92e6cc",icon:"film"},{id:"youtube",name:"YouTube",desc:"واکنش‌های تریلر",tone:"#f49f9d",icon:"play"},{id:"digimoviez",name:"DigiMoviez",desc:"نظرات فارسی",tone:"#b6a4ff",icon:"chat"}];
+const poster = movie => /^\/[\w.-]+\.(jpg|png|webp)$/i.test(movie?.poster_path || "") ? "https://image.tmdb.org/t/p/w185" + movie.poster_path : null;
+function Icon({name,size=18}){
+  const paths={
+    film:"M4 3h16v18H4zM4 8h4m-4 8h4m8-8h4m-4 8h4M10 7l6 5-6 5",
+    play:"M8 5v14l11-7z",chat:"M4 5h16v13H9l-5 4V5Zm4 5h8m-8 4h5",
+    search:"M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm5.5-2.5L22 22",
+    spark:"m12 2 1.8 7.2L21 11l-7.2 1.8L12 20l-1.8-7.2L3 11l7.2-1.8L12 2Z",
+    check:"m5 12 4 4L19 6",arrow:"M7 17 17 7m-9 0h9v9",
+    shield:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Zm-4-10 3 3 5-6",
+    bolt:"m13 2-9 12h7l-1 8 10-13h-7V2Z",
+    graph:"M4 20V12m5 8V7m5 13V10m5 10V4",
+    globe:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM2 12h20",
+    sliders:"M4 7h16M4 17h16M9 4v6m6 4v6",
+    down:"m6 9 6 6 6-6",eye:"M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+    info:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 11v6m0-10v.5"
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name]||paths.spark}/></svg>;
+}
+function Poster({movie}){
+  const src=poster(movie);
+  return src?<img className="cs-poster" width="47" height="67" loading="lazy" src={src} alt={"پوستر "+movie.title}/>:
+    <span className="cs-poster" style={{display:"grid",placeItems:"center"}}><Icon name="film"/></span>;
+}
+
 const keyFor = (source, comment) => source + ":" + comment.id;
 
 async function postJson(path,body,scraperCode){
@@ -34,6 +58,14 @@ export default function MultiSourcePage(){
   const [sources,setSources]=useState(["tmdb"]);
   const [scraperKey,setScraperKey]=useState("");
   const [maxComments,setMaxComments]=useState(10);
+  const [secretVisible,setSecretVisible]=useState(false);
+  const [activeSource,setActiveSource]=useState("all");
+  const [activeSentiment,setActiveSentiment]=useState("all");
+  const [commentKeyword,setCommentKeyword]=useState("");
+  const [pageSize,setPageSize]=useState(8);
+  const [expanded,setExpanded]=useState({});
+  const [aiComplete,setAiComplete]=useState(false);
+  const [searchBusy,setSearchBusy]=useState(false);
   const [providers,setProviders]=useState(null);
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
@@ -70,7 +102,7 @@ export default function MultiSourcePage(){
   },[query,providers]);
   function resetAnalysis(){
     workerRef.current?.terminate();workerRef.current=null;runId.current++;
-    setAiBusy(false);setAiError("");setAiProgress("");setAiResults({});
+    setAiBusy(false);setAiError("");setAiProgress("");setAiResults({});setAiComplete(false);
   }
   function toggle(source,checked){
     setSources(prev=>checked?[...prev,source]:prev.filter(s=>s!==source));
@@ -141,7 +173,7 @@ export default function MultiSourcePage(){
       }
       if(data.type==="complete"){
         const next=Object.fromEntries(data.results.map(item=>[item.key,item]));
-        setAiResults(next);setAiBusy(false);
+        setAiResults(next);setAiBusy(false);setAiComplete(true);
         setAiProgress("تحلیل مرورگری کامل شد.");
         worker.terminate();workerRef.current=null;
       }
@@ -161,103 +193,21 @@ export default function MultiSourcePage(){
     ||((sources.includes("youtube")||sources.includes("digimoviez"))&&!scraperKey.trim())
     ||Number(maxComments)<1||Number(maxComments)>30;
   const filmCount=result?.sources.filter(g=>g.category==="film").reduce((n,g)=>n+g.comments.length,0)||0;
-  return <Container maxWidth="md" sx={{py:5,direction:"rtl"}}>
-    <Typography variant="h4" fontWeight={700} gutterBottom>CineSense</Typography>
-    <Typography variant="h6" sx={{mb:2}}>تحلیل نظرات فیلم از منابع مختلف</Typography>
-    <Alert severity="info" sx={{mb:2}}>
-      فقط فیلم را انتخاب کن؛ جست‌وجوی تریلر در YouTube و صفحه فیلم در DigiMoviez به‌صورت خودکار انجام می‌شود.
-      برای جلوگیری از اشتباه، عنوان و سال انتشار بررسی می‌شود و اگر تطبیق قابل اعتماد نباشد، آن منبع کنار گذاشته می‌شود.
-      تحلیل هوش مصنوعی با درخواست خودت در مرورگر اجرا می‌شود و اولین استفاده دانلود مدل را لازم دارد.
-    </Alert>
-    {error&&<Alert severity="error" sx={{mb:2}}>{error}</Alert>}
-    {providers&&!providers.persianModel?.enabled&&<Alert severity="warning" sx={{mb:2}}>
-      مدل فارسی مرورگری هنوز میزبانی و فعال نشده است؛ خروجی فارسی «نامشخص» خواهد بود.
-    </Alert>}
-    {providers&&!providers.tmdb?.enabled&&<Alert severity="warning">
-      کلید TMDB روی Vercel ثبت نشده است.
-    </Alert>}
-    <Box sx={{display:"flex",flexWrap:"wrap",gap:1}}>
-      {Object.entries(LABELS).map(([key,label])=>
-        <FormControlLabel key={key} control={<Checkbox checked={sources.includes(key)}
-          disabled={!providers?.[key]?.enabled}
-          onChange={e=>toggle(key,e.target.checked)}/>} label={label}/>)}
-    </Box>
-    <Autocomplete options={movies} value={selectedMovie}
-      filterOptions={x=>x} isOptionEqualToValue={(a,b)=>a.id===b.id}
-      getOptionLabel={movie=>typeof movie==="string"?movie:
-        movie.title+(movie.release_date?" ("+movie.release_date.slice(0,4)+")":"")}
-      onChange={(_e,v)=>{setSelectedMovie(v);setResult(null);resetAnalysis();}}
-      inputValue={query} onInputChange={(_e,v,reason)=>{setQuery(v);if(reason==="input"){setSelectedMovie(null);setResult(null);resetAnalysis();}}}
-      renderInput={params=><TextField {...params} fullWidth margin="normal" label="نام فیلم را جست‌وجو و انتخاب کن" helperText="تنها انتخاب فیلم کافی است؛ CineSense خودش منبع مرتبط را پیدا می‌کند."/>}/>
-    {(sources.includes("digimoviez")||sources.includes("youtube"))&&<TextField fullWidth margin="normal" type="password" autoComplete="off"
-      label="کد دسترسی خصوصی DigiMoviez / YouTube" value={scraperKey}
-      onChange={e=>setScraperKey(e.target.value)} helperText="برای محافظت از سهمیه رایگان سرور؛ فقط نزد مالک پروژه است." />}
-    <TextField type="number" margin="normal" fullWidth label="حداکثر تعداد نظرات هر منبع (۱ تا ۳۰)"
-      value={maxComments} onChange={e=>setMaxComments(e.target.value)}
-      inputProps={{min:1,max:30}}/>
-    <Button variant="contained" disabled={disabled} sx={{mt:2}} onClick={submit}>
-      {loading?"در حال دریافت نظرات...":"دریافت نظرات"}
-    </Button>
-    {loading&&<LinearProgress sx={{mt:2}}/>}
+  const totalCount=result?.sources.reduce((n,g)=>n+g.comments.length,0)||0;
+  const totalTrailer=result?.sources.filter(g=>g.category==="trailer").reduce((n,g)=>n+g.comments.length,0)||0;
+  const displayed=useMemo(()=>result?.sources.flatMap(g=>g.comments.map(c=>({group:g,comment:c,ai:aiResults[keyFor(g.source,c)]})))||[],[result,aiResults]);
+  const visible=displayed.filter(item=>(activeSource==="all"||item.group.source===activeSource) &&
+    (activeSentiment==="all"||(item.ai?.sentiment||"Unclassified")===activeSentiment) &&
+    (!commentKeyword.trim()||String(item.comment.text+" "+(item.comment.author||"")).toLocaleLowerCase().includes(commentKeyword.trim().toLocaleLowerCase())));
+  const segments=[{id:"Positive",color:"#92e6cc",name:"مثبت"},{id:"Neutral",color:"#ebc986",name:"خنثی"},
+    {id:"Negative",color:"#f49f9d",name:"منفی"},{id:"Unclassified",color:"#555b78",name:"تحلیل‌نشده"}];
+  const filmValues=segments.map(seg=>({...seg,count:result?.sources.filter(g=>g.category==="film").flatMap(g=>g.comments)
+    .filter(c=>(aiResults[keyFor(c.source,c)]?.sentiment||"Unclassified")===seg.id).length||0}));
+  const classified=stats?.classified||0;
+  const pct=(count,total)=>total?Math.round(100*count/total):0;
+  const pos=filmValues[0].count,neu=filmValues[1].count,neg=filmValues[2].count;
+  const gradient=filmCount? "conic-gradient(#92e6cc 0 "+pct(pos,filmCount)+"%,#ebc986 "+pct(pos,filmCount)+"% "+pct(pos+neu,filmCount)+"%,#f49f9d "+pct(pos+neu,filmCount)+"% "+pct(pos+neu+neg,filmCount)+"%,#555b78 "+pct(pos+neu+neg,filmCount)+"% 100%)":"#555b78";
+  const protectedSelected=sources.includes("youtube")||sources.includes("digimoviez");
 
-    {result&&<Box sx={{mt:4}}>
-      <Card sx={{mb:2}}><CardContent>
-        <Typography variant="h6">نظرات فیلم دریافت‌شده: {filmCount}</Typography>
-        <Typography>درصد مثبت بر اساس امتیاز ثبت‌شده نویسندگان در TMDB: {score(result.summary)}</Typography>
-        {result.summary.averageRating!=null&&<Typography>
-          میانگین امتیاز ثبت‌شده TMDB: {result.summary.averageRating} از ۱۰
-        </Typography>}
-        <Typography color="text.secondary">تعداد واکنش‌های تریلر (جداگانه): {result.trailerSummary.total}</Typography>
-        {stats?.classified>0&&<Box sx={{mt:2}}>
-          <Typography variant="h6">رضایت تخمینی از تحلیل متن با AI: {score(stats)}</Typography>
-          <Typography color="text.secondary">تحلیل‌شده: {stats.classified} از {stats.total} نظر فیلم؛ این درصد جایگزین نظرسنجی نیست.</Typography>
-        </Box>}
-        <Box sx={{mt:2}}>
-          <Button onClick={startLocalAI} disabled={aiBusy||!result.sources.some(x=>x.comments.length)}>
-            {aiBusy?"هوش مصنوعی در حال تحلیل...":"شروع تحلیل متن با AI رایگان"}
-          </Button>
-          {aiBusy&&<Button onClick={resetAnalysis} color="inherit">لغو تحلیل</Button>}
-          {!!aiProgress&&<Typography color="text.secondary">{aiProgress}</Typography>}
-          {aiBusy&&<LinearProgress sx={{mt:1}}/>}
-          {!!aiError&&<Alert severity="warning" sx={{mt:2}}>{aiError}</Alert>}
-        </Box>
-      </CardContent></Card>
-      {result.errors.map((item,i)=><Alert severity="warning" sx={{mb:2}} key={item.source+i}>
-        {LABELS[item.source]||item.source}: {item.error}
-      </Alert>)}
-      {result.sources.map(group=><Card key={group.source} sx={{mb:2}}><CardContent>
-        <Typography variant="h6">{LABELS[group.source]} — {group.comments.length} نظر</Typography>
-        {group.matchedSource&&<Box sx={{my:1,p:1.5,border:"1px solid #7773",borderRadius:1}}>
-          <Typography variant="body2">منبع تطبیق‌داده‌شده: {group.matchedSource.title}</Typography>
-          {group.matchedSource.channel&&<Typography variant="caption" display="block">کانال: {group.matchedSource.channel}</Typography>}
-          <Typography variant="caption" color="text.secondary" display="block">اعتماد تطبیق: {Math.round((group.matchedSource.confidence||0)*100)}٪ (تخمینی)</Typography>
-          <a href={group.matchedSource.url} target="_blank" rel="noopener noreferrer">مشاهده صفحه پیدا‌شده</a>
-        </Box>}
-        {group.comments.map((comment,index)=>{
-          const analysis=aiResults[keyFor(group.source,comment)];
-          return <Box key={comment.id+"-"+index} sx={{borderTop:"1px solid #7773",py:2}}>
-            <Box sx={{display:"flex",gap:1,flexWrap:"wrap",alignItems:"center"}}>
-              <Chip size="small" label={comment.rating!=null
-                ?"امتیاز نویسنده: "+comment.rating+"/۱۰":"بدون امتیاز عددی"}/>
-              {analysis&&<Chip size="small" color={analysis.sentiment==="Positive"?"success":analysis.sentiment==="Negative"?"error":"default"}
-                label={"AI: "+LABEL_FA[analysis.sentiment]}/>}
-              {comment.author&&<Typography variant="caption">{comment.author}</Typography>}
-            </Box>
-            <Typography sx={{whiteSpace:"pre-wrap",overflowWrap:"anywhere",mt:1,direction:"auto"}}>{comment.text}</Typography>
-            {comment.sourceUrl&&<a href={comment.sourceUrl} target="_blank" rel="noopener noreferrer">مشاهده متن منبع</a>}
-          </Box>;
-        })}
-      </CardContent></Card>)}
-    </Box>}
-
-    <Box component="footer" sx={{mt:4,pt:2,borderTop:"1px solid #7773"}}>
-      <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" style={{display:"inline-block",verticalAlign:"middle",marginLeft:12}}>
-        <img width="46" height="34" alt="TMDB logo" style={{objectFit:"contain"}}
-          src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg"/>
-      </a>
-      <Typography component="span" variant="caption" lang="en" dir="ltr">
-        This product uses the TMDB API but is not endorsed or certified by TMDB.
-      </Typography>
-    </Box>
-  </Container>;
+  // CineSense v2 JSX is appended by the second patch step.
 }
