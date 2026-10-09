@@ -73,8 +73,8 @@ test("invalid and scraper requests are rejected without upstream calls", async (
 });
 
 test("serverless scraper rejects arbitrary hosts and insecure URL schemes", () => {
-  assert.equal(validateDigiMoviezUrl("https://digimoviez44.top/sample/"),"https://digimoviez44.top/sample/");
-  for(const url of ["http://digimoviez44.top/", "https://localhost/", "https://example.com/", "https://digimoviez44.top.evil.com/", "file:///etc/passwd"]) {
+  assert.equal(validateDigiMoviezUrl("https://digimoviez.com/sample/"),"https://digimoviez.com/sample/");
+  for(const url of ["http://digimoviez.com/", "https://localhost/", "https://example.com/", "https://digimoviez.com.evil.com/", "file:///etc/passwd"]) {
     assert.throws(()=>validateDigiMoviezUrl(url));
   }
 });
