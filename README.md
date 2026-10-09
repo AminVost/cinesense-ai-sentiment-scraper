@@ -12,6 +12,11 @@ CineSense is a self-hosted prototype that collects permitted film reviews and cl
 
 *Note:* "free" is not synonymous with unlimited or commercially licensed. YouTube API has quota and separate data restrictions; TMDB's usage/attribution terms apply.
 
+
+## Deploy on Vercel Hobby
+
+Import the GitHub repository as a **new Vercel project** using Root Directory `movie-scraper`. Configure a server-only `TMDB_READ_ACCESS_TOKEN` in the project settings. The Vercel-compatible API routes are built into Next.js and do not require Express/Python for official source reviews. This **reduced cloud edition** shows original review text and explicit TMDB review-author ratings; it does not perform AI inference and leaves Playwright scraping disabled. For the subdomain `cinesense.aminvost.ir`, see [VERCEL_DEPLOY.md](movie-scraper/VERCEL_DEPLOY.md). Vercel Hobby and TMDB developer API are for non-commercial usage subject to their conditions.
+
 ## Start locally
 
 Requirements: Node.js 22, Python 3.10+, Chromium for Playwright, available RAM for local BERT models.
