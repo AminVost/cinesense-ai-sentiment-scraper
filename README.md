@@ -1,77 +1,33 @@
-# CineSense (Movie Scraper & AI Sentiment Analysis)
+# CineSense — Free Multi-Source Movie Review Analysis
 
-CineSense is an intelligent, microservices-based system that bridges the gap between streaming platforms and artificial intelligence. It acts as a real-time data pipeline, extracting user comments from various movie platforms and utilizing Natural Language Processing (NLP) to analyze sentiment, providing users with a "Net Satisfaction Score."
+CineSense gathers film opinions from permitted sources and analyzes sentiment with locally hosted AI. Free API keys, quotas, platform terms and your own compute resources still apply.
 
-## 🎯 The Problem & Our Solution
-**The Problem:** To decide if a movie is worth watching, users typically scroll through dozens of reviews. This leads to wasted time, a high risk of encountering spoilers, and users leaving the streaming platform to check external ratings (like IMDb).
+## Providers
 
-**The Solution:** CineSense automates this workflow:
-1. Users search for a movie using a blazing-fast autocomplete UI powered by the TMDB API.
-2. The system seamlessly scrapes target websites in the background to gather user reviews.
-3. A custom AI model reads every comment to determine the sentiment (Positive, Negative, or Neutral).
-4. Users receive a clean, aggregated metric (e.g., "85% User Satisfaction") instead of reading through walls of text, entirely preventing spoilers.
+- TMDB: official API for movie search and reviews. Configure a free TMDB v4 Read Access Token or API key (non-commercial API terms and attribution apply).
+- DigiMoviez: optional pre-existing Playwright scraper restricted to allowlisted HTTPS domains, subject to permission and changes to page structure.
+- YouTube: optional YouTube Data API for top-level trailer comments. Needs an API key and free quota. Trailer reactions are never mixed into film review satisfaction.
 
-## 🏛 Architecture & Tech Stack
+## Local start
 
-The system is highly scalable and separated into three core microservices:
+1. In bertModel: pip install -r requirements.txt and uvicorn fastApi:app --host 127.0.0.1 --port 8000
+2. In express-scraper: copy .env.example to .env, configure TMDB credential, npm ci, npx playwright install chromium, npm start
+3. In movie-scraper: npm ci, npm run dev
+4. Open http://localhost:3000 (legacy UI remains at /direct-url).
 
-### 1. Frontend (User Interface)
-A lightweight, lightning-fast UI responsible purely for data presentation and user interaction.
-*   **Framework:** Next.js 15 (App Router & Turbopack)
-*   **UI & Styling:** React 19, Material UI (MUI), Bootstrap, Emotion
-*   **Data Fetching:** SWR
+## API
 
-### 2. Middleware (Scraper Engine)
-Acts as an internal search engine, handling network traffic and raw data collection.
-*   **Environment:** Node.js
-*   **Framework:** Express.js
-*   **Web Scraping:** Playwright
-*   **HTTP Client:** Axios
+GET /api/providers
+POST /api/search-movie — JSON body: {"query":"Interstellar"}
+POST /api/analyze-movie — JSON body: {"tmdbId":157336,"sources":["tmdb"],"maxComments":20}
+Optional source-specific fields: digimoviezUrl (digimoviez), youtubeVideoId (youtube).
+POST /api/fetch-comments — legacy extractor, now restricted by the configured HTTPS host allowlist.
 
-### 3. AI Backend (Sentiment Analysis)
-The core intelligence of the system, transforming raw text into actionable data.
-*   **Framework:** FastAPI (Python)
-*   **Machine Learning:** PyTorch, Hugging Face Transformers
-*   **Model:** Fine-tuned BERT for Sentiment Analysis
-*   **Server:** Uvicorn
+The response separates source summaries, movie satisfaction, trailer reaction statistics and per-source errors.
 
-## 💼 Business & B2B Value (SaaS)
-Beyond solving user problems, CineSense provides significant value to streaming platform operators:
-*   **Increases Retention Rate:** Keeps users on the platform instead of leaving for external review sites.
-*   **Boosts Engagement:** Encourages users to leave their own comments to influence the global sentiment score.
-*   **Zero Database Overhead:** Provides heavy AI features via a simple API integration without taxing the platform's primary databases.
+## Important limitations
 
-## 🚀 Getting Started
+Do not publish the scraper as a public open proxy. URL redirects, rate limiting, authentication, quotas and provider licenses still require production hardening.
+The original AI model is a Persian binary classifier, not a validated multilingual review model. International reviews require a multilingual classifier before percentage outputs can be trusted. Self-labelled fine-tuning data are not a reliable accuracy benchmark.
 
-To run this project locally, you will need to start all three microservices. 
-
-### Prerequisites
-*   Node.js (v18+)
-*   Python (3.8+)
-*   Git
-
-### 1. Start the AI Backend
-```bash
-cd bertModel
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-### 2. Start the Scraper Middleware
-```bash
-cd express-scraper
-npm install
-node index.js
-```
-
-### 3. Start the Frontend
-```bash
-cd movie-scraper
-npm install
-npm run dev
-```
-
-The frontend will be available at `http://localhost:3000`.
-
-## 📄 License
-This project is licensed under the ISC License.
+Repository code license: MIT. Third-party content follows each provider's terms.
