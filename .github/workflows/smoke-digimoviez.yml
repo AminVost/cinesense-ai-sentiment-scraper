@@ -16,7 +16,7 @@ jobs:
           node --input-type=module <<'NODE'
           const response=await fetch("https://cinesense.aminvost.ir/api/fetch-comments",{
             method:"POST",headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({url:"https://digimoviez44.top/project-y-2026/",maxComments:3}),
+            body:JSON.stringify({url:"https://digimoviez.com/the-invite-2026/",maxComments:3}),
             signal:AbortSignal.timeout(80000)
           });
           const body=await response.json().catch(()=>({error:"Invalid JSON response"}));
