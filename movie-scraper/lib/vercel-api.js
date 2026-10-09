@@ -17,7 +17,7 @@ export function available() {
   return {
     tmdb: { enabled: Boolean(process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_KEY), type: "film", metric: "author_rating" },
     youtube: { enabled: Boolean(process.env.YOUTUBE_API_KEY), type: "trailer", metric: "unclassified" },
-    digimoviez: { enabled: true, type: "film", requiresUrl: true, experimental: true, metric: "browser_ai_optional" },
+    digimoviez: { enabled: Boolean(process.env.CINESENSE_SCRAPER_ACCESS_CODE?.length >= 24), type: "film", requiresUrl: true, requiresAccessCode: true, experimental: true, metric: "browser_ai_optional" },
   };
 }
 
