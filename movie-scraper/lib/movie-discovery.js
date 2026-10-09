@@ -32,9 +32,8 @@ export function movieIdentity(movie) {
 export function rankYouTubeCandidate(movie,video) {
   const identity=movieIdentity(movie);
   const title=String(video?.title||"");
-  const clean=stripTrailerTags(title).replace(/\\b[1-9]\\b/g," ").replace(/\\s+/g," ").trim();
+  const clean=stripTrailerTags(title).replace(/\b[1-9]\b/g," ").replace(/\s+/g," ").trim();
   const sim=Math.max(dice(identity.title,clean),dice(identity.translated,clean));
-  const lower=normalizeTitle(title);
   const candidateYear=(title.match(/\b(19\d\d|20\d\d)\b/g)||[]).map(Number);
   if(identity.year&&candidateYear.length&&candidateYear.every(y=>Math.abs(y-identity.year)>1))
     return {score:0,reason:"year_conflict"};
@@ -54,7 +53,7 @@ export function rankYouTubeCandidate(movie,video) {
 }
 export function rankDigiCandidate(movie,entry) {
   const identity=movieIdentity(movie),title=String(entry?.title||"");
-  const normal=normalizeTitle(title).replace(/^(?:دانلود\\s+)?(?:فیلم|سریال|انیمیشن)\\s+/u,"").replace(/\\b(?:19|20)\\d\\d\\b/g," ").replace(/\\s+/g," ").trim();
+  const normal=normalizeTitle(title).replace(/^(?:دانلود\s+)?(?:فیلم|سریال|انیمیشن)\s+/u,"").replace(/\b(?:19|20)\d\d\b/g," ").replace(/\s+/g," ").trim();
   if(!title)return {score:0,reason:"empty"};
   const score=Math.max(dice(identity.title,normal),dice(identity.translated,normal));
   const candidateYears=(title.match(/\b(?:19|20)\d\d\b/g)||[]).map(Number);
