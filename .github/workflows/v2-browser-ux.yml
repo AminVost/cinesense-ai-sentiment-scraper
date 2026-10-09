@@ -1,0 +1,64 @@
+name: CineSense v2 real browser UX
+on:
+  push:
+    branches: [feat/cinesense-v2-cinematic-design]
+    paths: [.github/workflows/v2-browser-ux.yml]
+permissions: { contents: read }
+jobs:
+  browser-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install existing Playwright tests runtime
+        run: npm ci --no-audit --no-fund
+        working-directory: movie-scraper
+      - name: Test mobile and desktop real browser interaction
+        working-directory: movie-scraper
+        run: |
+          node --input-type=module <<'NODE'
+          import {chromium} from "playwright-core";
+          const browser=await chromium.launch({channel:"chrome",headless:true,args:["--no-sandbox"]});
+          const base="https://cinesense-88kqz7cys-aminvosts-projects.vercel.app";
+          try{
+            for(const width of [390,1440]){
+              const page=await browser.newPage({viewport:{width,height:844},deviceScaleFactor:1});
+              const errors=[];
+              page.on("pageerror",e=>errors.push(String(e.message).slice(0,190)));
+              const response=await page.goto(base+"/multi-source",{waitUntil:"domcontentloaded",timeout:40000});
+              if(response.status()!==200)throw Error("HTTP "+response.status());
+              await page.getByText("هر فیلم، هزار نگاه.").waitFor({timeout:15000});
+              await page.getByPlaceholder("مثلاً Interstellar یا Inception").fill("Interstellar");
+              await page.getByRole("option").first().waitFor({timeout:20000});
+              await page.getByRole("option").first().click();
+              const fetchButton=page.getByRole("button",{name:/پیدا کردن و دریافت نظرات/});
+              if(!(await fetchButton.isEnabled()))throw Error("Primary action disabled after movie selection");
+              await fetchButton.click();
+              await page.getByRole("heading",{name:"گزارش تحلیل فیلم"}).waitFor({timeout:40000});
+              if(await page.getByText("لینک HTTPS صفحه فیلم").count())throw Error("Old manual DigiMoviez URL remains");
+              const measure=await page.evaluate(()=>({
+                viewport:window.innerWidth,docWidth:document.documentElement.scrollWidth,
+                bg:getComputedStyle(document.querySelector(".cs-app")).backgroundColor,
+                sourceTiles:document.querySelectorAll(".cs-source").length,
+                totalCards:document.querySelectorAll(".cs-stat-card").length,
+                listCards:document.querySelectorAll(".cs-comment").length,
+              }));
+              if(measure.docWidth>measure.viewport+3)
+                throw Error("Horizontal mobile overflow: "+JSON.stringify(measure));
+              if(measure.sourceTiles!==3||measure.totalCards!==4)
+                throw Error("Dashboard missing expected source/stat cards: "+JSON.stringify(measure));
+              if(errors.length)throw Error("JS errors: "+JSON.stringify(errors));
+              await page.screenshot({path:"/tmp/cinesense-v2-"+width+".png",fullPage:true});
+              console.log("V2_BROWSER_PASS",JSON.stringify({width,...measure}));
+              await page.close();
+            }
+          }finally{await browser.close();}
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: cinesense-v2-mobile-desktop
+          path: /tmp/cinesense-v2-*.png
+          retention-days: 3
