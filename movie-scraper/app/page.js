@@ -1,7 +1,2 @@
-import DirectUrlPage from "./direct-url/page";
-
-export default function Home() {
-  return (
-    <DirectUrlPage />
-  );
-}
+import MultiSourcePage from "./multi-source/page";
+export default function Home() { return <MultiSourcePage />; }

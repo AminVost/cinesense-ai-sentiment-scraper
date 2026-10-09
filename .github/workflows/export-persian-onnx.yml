@@ -1,0 +1,27 @@
+name: Export Persian sentiment ONNX
+on:
+  workflow_dispatch:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths: [.github/workflows/export-persian-onnx.yml]
+permissions:
+  contents: read
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ONNX conversion dependencies
+        run: pip install -r bertModel/requirements-onnx-export.txt
+      - name: Export and quantize ParsBERT
+        run: python bertModel/tools/export_persian_onnx.py --out ./model-export/persian
+      - name: Upload model for a free Hugging Face hosting account
+        uses: actions/upload-artifact@v4
+        with:
+          name: persian-sentiment-onnx
+          path: ./model-export/persian/
+          retention-days: 7

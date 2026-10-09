@@ -1,0 +1,45 @@
+name: Publish Persian ONNX to Hugging Face
+on:
+  workflow_dispatch:
+    inputs:
+      repo_id:
+        description: 'Public Hugging Face model repository id, e.g. my-user/cinesense-persian-sentiment-onnx'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: persian-sentiment-onnx
+          run-id: 37942583075
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: model-assets
+      - name: Upload open-source model to private owner-controlled HF account
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          MODEL_ID: ${{ inputs.repo_id }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is not configured. Add a free Hugging Face write token in GitHub Actions secrets."
+            exit 1
+          fi
+          python -m pip install 'huggingface_hub>=0.25,<2'
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          model_id=os.environ["MODEL_ID"]
+          if "/" not in model_id or not model_id.strip():
+              raise RuntimeError("MODEL_ID must be namespace/repo-name")
+          api=HfApi(token=os.environ["HF_TOKEN"])
+          api.create_repo(repo_id=model_id,repo_type="model",private=False,exist_ok=True)
+          api.upload_folder(repo_id=model_id,folder_path="model-assets",repo_type="model",
+              commit_message="Publish verified quantized Persian ParsBERT ONNX model")
+          print("Uploaded ONNX model and tokenizer:",model_id)
+          PY

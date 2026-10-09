@@ -4,3 +4,4 @@ transformers
 torch
 pydantic
 psutil
+langdetect

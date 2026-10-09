@@ -1,0 +1,64 @@
+name: CineSense checks
+on:
+  push:
+    branches: [main, "feat/free-multi-source-reviews"]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Backend unit tests without external dependencies
+        working-directory: express-scraper
+        run: npm test
+      - name: Backend syntax checks
+        working-directory: express-scraper
+        run: |
+          for f in server.js scraper.js analyzeComments.js lib/*.js providers/*.js; do
+            node --check "$f"
+          done
+      - name: Python syntax check
+        run: |
+          python3 -m py_compile bertModel/fastApi.py bertModel/hooshFineTune.py
+          python3 -m unittest discover -s bertModel/tests -p 'test_*.py'
+  backend-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check backend lockfile and npm registry connectivity
+        working-directory: express-scraper
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm ci --no-audit --no-fund --fetch-retries=1 --fetch-timeout=30000
+      - name: Run API integration tests with mocked providers
+        working-directory: express-scraper
+        run: npm run test:integration
+  frontend-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install frontend dependencies
+        working-directory: movie-scraper
+        run: npm ci --no-audit --no-fund --fetch-retries=1 --fetch-timeout=30000
+      - name: Test Vercel serverless providers
+        working-directory: movie-scraper
+        run: node --test test/*.test.mjs
+      - name: Build Next.js
+        working-directory: movie-scraper
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: npm run build

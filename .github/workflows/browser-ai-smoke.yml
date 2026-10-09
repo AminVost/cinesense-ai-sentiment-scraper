@@ -1,0 +1,47 @@
+name: Browser AI live smoke
+on:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths: [.github/workflows/browser-ai-smoke.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies
+        working-directory: movie-scraper
+        run: npm ci --no-audit --no-fund
+      - name: Run real model inference in headless Chromium
+        working-directory: movie-scraper
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright-core';
+          const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
+          const page=await browser.newPage();
+          page.on('console', message=>{if(message.type()==='error')console.log('BROWSER ERROR',message.text().slice(0,200));});
+          try {
+            await page.goto('https://cinesense.aminvost.ir',{waitUntil:'domcontentloaded',timeout:30000});
+            const output=await page.evaluate(async()=>{
+              const worker=new Worker('/sentiment.worker.js',{type:'module'});
+              return await new Promise((resolve,reject)=>{
+                const timer=setTimeout(()=>{worker.terminate();reject(Error('Model loading / inference timed out'))},180000);
+                worker.onmessage=(event)=>{
+                  if(event.data.type==='complete'){clearTimeout(timer);worker.terminate();resolve(event.data);}
+                  if(event.data.type==='error'){clearTimeout(timer);worker.terminate();reject(Error(event.data.message));}
+                };
+                worker.onerror=(event)=>{clearTimeout(timer);worker.terminate();reject(Error(event.message||'Worker failed to load'));};
+                worker.postMessage({id:1,comments:[{key:'tmdb:1',text:'This was a wonderful movie with a beautiful ending.'}]});
+              });
+            });
+            const result=output.results?.[0];
+            if(!result?.model||!['Positive','Negative','Neutral'].includes(result.sentiment)) throw Error('Invalid browser AI output');
+            console.log('LIVE BROWSER AI PASSED:',result.sentiment,'positive=',result.positive.toFixed(3),'model=',result.model);
+          }finally{await browser.close();}
+          NODE

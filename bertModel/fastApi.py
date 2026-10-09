@@ -1,138 +1,141 @@
-import os
-import sys
-import torch
-import time
+"""Local inference service; no paid model API and no interactive startup prompt."""
 import logging
-import psutil
-from logging.handlers import RotatingFileHandler
+import os
+import threading
+import time
+from functools import lru_cache
+
+import torch
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from langdetect import DetectorFactory, LangDetectException, detect
+from pydantic import BaseModel, Field
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-log_formatter = logging.Formatter("%(asctime)s - [%(levelname)s] - %(message)s")
+DetectorFactory.seed = 0
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger("cinesense.ai")
+app = FastAPI(title="CineSense sentiment inference")
 
-file_handler = RotatingFileHandler("model_trace.log", maxBytes=5*1024*1024, backupCount=2)
-file_handler.setFormatter(log_formatter)
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+PERSIAN_LOCAL = os.getenv("PERSIAN_MODEL_PATH", "fine_tuned_model")
+PERSIAN_BASE = os.getenv("PERSIAN_BASE_MODEL", "HooshvareLab/bert-fa-base-uncased-sentiment-deepsentipers-binary")
+MULTILINGUAL = os.getenv("MULTILINGUAL_MODEL", "nlptown/bert-base-multilingual-uncased-sentiment")
+SUPPORTED_LANGUAGES = frozenset({"en", "de", "fr", "es", "it", "nl"})
+_INFERENCE_LOCK = threading.RLock()
 
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(log_formatter)
 
-logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
+class Comment(BaseModel):
+    id: int | str
+    text: str = Field(min_length=1, max_length=12000)
 
-app = FastAPI()
-
-def get_ram_usage():
-    process = psutil.Process(os.getpid())
-    mem_mb = process.memory_info().rss / (1024 * 1024)
-    return mem_mb
-
-logging.info(f"System boot RAM usage: {get_ram_usage():.2f} MB")
-logging.info("Initializing system and checking for models...")
-
-fine_tuned_model_path = "fine_tuned_model"
-model_loaded = False
-tokenizer = None
-model = None
-
-if os.path.exists(fine_tuned_model_path):
-    logging.info("Local model folder found. Attempting to load offline...")
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(
-            fine_tuned_model_path, 
-            local_files_only=True
-        )
-        model = AutoModelForSequenceClassification.from_pretrained(
-            fine_tuned_model_path, 
-            local_files_only=True
-        )
-        model_loaded = True
-        logging.info(f"Local fine-tuned model loaded. RAM usage now: {get_ram_usage():.2f} MB")
-    except Exception as e:
-        logging.error(f"Failed to load local model: {e}")
-else:
-    logging.warning("Local model directory does not exist.")
-
-if not model_loaded:
-    print("\n" + "="*60)
-    print("LOCAL MODEL NOT FOUND OR CORRUPTED")
-    print("The system cannot find a valid local model to run offline.")
-    print("Do you want to download the base model from Hugging Face? (~400MB)")
-    print("Requires active internet connection.")
-    print("="*60)
-    
-    user_choice = input("Download and continue? (y/n): ").strip().lower()
-    
-    if user_choice == 'y':
-        logging.info("Downloading base model from Hugging Face...")
-        try:
-            model_name = "HooshvareLab/bert-fa-base-uncased-sentiment-deepsentipers-binary"
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
-            logging.info(f"Base model loaded. RAM usage now: {get_ram_usage():.2f} MB")
-        except Exception as e:
-            logging.error(f"Failed to download the model. Check your internet connection. Error: {e}")
-            sys.exit(1)
-    else:
-        logging.info("Model download cancelled by user. Shutting down server...")
-        sys.exit(0)
-
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model.to(device)
-
-logging.info(f"AI Engine is fully operational! Running on: {device.upper()}")
 
 class CommentRequest(BaseModel):
-    comments: list[dict] 
+    comments: list[Comment] = Field(min_length=1, max_length=100)
+
+
+def detect_language(text: str) -> str:
+    letters = sum(character.isalpha() for character in text)
+    persian_script = sum("\u0600" <= character <= "\u06ff" for character in text)
+    if letters and persian_script / letters > 0.35:
+        return "fa"
+    try:
+        language = detect(text)
+        return language if language in SUPPORTED_LANGUAGES else "unsupported"
+    except LangDetectException:
+        return "unsupported"
+
+
+def persian_model_name() -> str:
+    return PERSIAN_LOCAL if os.path.isdir(PERSIAN_LOCAL) else PERSIAN_BASE
+
+
+@lru_cache(maxsize=2)
+def load_model(model_id: str):
+    """Load lazily. Initial download comes from Hugging Face only when requested."""
+    log.info("Loading sentiment model %s on %s", model_id, DEVICE)
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForSequenceClassification.from_pretrained(model_id)
+    model.to(DEVICE)
+    model.eval()
+    return tokenizer, model
+
+
+def classify(texts: list[str], model_id: str, *, binary: bool):
+    """Preserve input order; bound model batch size for CPU/memory stability."""
+    with _INFERENCE_LOCK:
+        tokenizer, model = load_model(model_id)
+        predictions = []
+        for offset in range(0, len(texts), 8):
+            tokens = tokenizer(
+                texts[offset:offset + 8],
+                padding=True, truncation=True, max_length=512, return_tensors="pt",
+            ).to(DEVICE)
+            with torch.inference_mode():
+                probabilities = torch.softmax(model(**tokens).logits, dim=-1).cpu().tolist()
+            for values in probabilities:
+                if binary:
+                    negative, neutral, positive = values[0], 0.0, values[1]
+                else:
+                    # nlptown predicts 1–5 stars, not binary positive/negative.
+                    negative, neutral, positive = sum(values[:2]), values[2], sum(values[3:])
+                scores = {"Positive": positive, "Negative": negative}
+                if not binary:
+                    scores["Neutral"] = neutral
+                label = max(scores, key=scores.get)
+                predictions.append((label, positive, negative, neutral))
+        return predictions
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "device": str(DEVICE), "models_loaded": load_model.cache_info().currsize}
+
 
 @app.post("/analyze/")
-async def analyze_comments(request: CommentRequest):
-    logging.info("Received a new request for sentiment analysis.")
+def analyze_comments(request: CommentRequest):
+    started = time.monotonic()
+    results = [None] * len(request.comments)
+    groups = {"fa": [], "international": []}
 
-    comments = request.comments
-    if not comments:
-        logging.warning("No comments provided in request!")
-        raise HTTPException(status_code=400, detail="No comments provided!")
+    for index, comment in enumerate(request.comments):
+        language = detect_language(comment.text)
+        if language == "fa":
+            groups["fa"].append((index, comment, language))
+        elif language in SUPPORTED_LANGUAGES:
+            groups["international"].append((index, comment, language))
+        else:
+            results[index] = {
+                "id": comment.id, "text": comment.text, "language": language,
+                "sentiment": "Unclassified", "positive": None, "negative": None,
+                "neutral": None, "model": None,
+            }
 
-    start_ram = get_ram_usage()
-    logging.info(f"Processing {len(comments)} comments. RAM before inference: {start_ram:.2f} MB")
+    for group, entries in groups.items():
+        if not entries:
+            continue
+        model_id = persian_model_name() if group == "fa" else MULTILINGUAL
+        try:
+            predictions = classify(
+                [comment.text for _, comment, _ in entries],
+                model_id, binary=(group == "fa"),
+            )
+        except Exception as error:
+            log.exception("Inference unavailable for model %s", model_id)
+            raise HTTPException(status_code=503, detail="Local sentiment model unavailable") from error
 
-    start_total_time = time.time()
+        for (index, comment, language), (label, positive, negative, neutral) in zip(entries, predictions):
+            results[index] = {
+                "id": comment.id, "text": comment.text, "language": language,
+                "sentiment": label,
+                "positive": f"{positive * 100:.2f}%",
+                "negative": f"{negative * 100:.2f}%",
+                "neutral": f"{neutral * 100:.2f}%",
+                "model": model_id,
+            }
 
-    batch_texts = [comment["text"] for comment in comments]
+    return {"processing_time": f"{time.monotonic() - started:.4f} seconds", "results": results}
 
-    tokens = tokenizer(batch_texts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
-
-    with torch.no_grad():
-        outputs = model(**tokens)
-
-    probabilities = torch.nn.functional.softmax(outputs.logits, dim=-1)
-
-    results = []
-    for i, comment in enumerate(comments):
-        negative_prob = probabilities[i][0].item() * 100
-        positive_prob = probabilities[i][1].item() * 100
-        sentiment = "Positive" if positive_prob > negative_prob else "Negative"
-
-        results.append({
-            "id": comment["id"],
-            "text": comment["text"],
-            "sentiment": sentiment,
-            "positive": f"{positive_prob:.2f}%",
-            "negative": f"{negative_prob:.2f}%"
-        })
-
-    total_processing_time = time.time() - start_total_time
-    end_ram = get_ram_usage()
-    
-    logging.info(f"Processing completed in {total_processing_time:.4f} seconds.")
-    logging.info(f"RAM after inference: {end_ram:.2f} MB (Spike: {end_ram - start_ram:.2f} MB)")
-
-    return {
-        "processing_time": f"{total_processing_time:.4f} seconds",
-        "results": results
-    }
 
 if __name__ == "__main__":
     import uvicorn
-    logging.info("Starting FastAPI server...")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
