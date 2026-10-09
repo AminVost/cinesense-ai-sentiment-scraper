@@ -1,0 +1,47 @@
+name: CineSense live TMDB smoke
+on:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths:
+      - .github/workflows/smoke-live.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-tmdb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate production website and live TMDB movie reviews
+        run: |
+          node --input-type=module <<'NODE'
+          const origin = "https://cinesense.aminvost.ir";
+          async function request(path, body) {
+            const response = await fetch(origin + path, {
+              ...(body ? {method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(body)} : {}),
+              signal: AbortSignal.timeout(40000),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+              throw new Error(path + " returned HTTP " + response.status + " / " + (data.error || "No error message"));
+            }
+            return data;
+          }
+          const providers = await request("/api/providers");
+          if (!providers.tmdb?.enabled) throw new Error("TMDB token unavailable on production deployment");
+          console.log("PASS: production TMDB enabled, YouTube enabled:", Boolean(providers.youtube?.enabled));
+          const results = await request("/api/search-movie", {query:"Interstellar"});
+          const movie = results.results?.find(x => x.id === 157336);
+          if (!movie) throw new Error("TMDB live search did not return Interstellar movie id 157336");
+          console.log("PASS: TMDB live search returned", movie.title);
+          const analysis = await request("/api/analyze-movie", {sources:["tmdb"],tmdbId:157336,maxComments:5});
+          if (analysis.errors?.length) throw new Error("TMDB review fetch failed: " + analysis.errors[0].error);
+          const tmdb = analysis.sources?.find(x=>x.source==="tmdb");
+          if (!tmdb) throw new Error("TMDB review source result missing");
+          if (!Array.isArray(tmdb.comments)) throw new Error("Review results invalid");
+          if (tmdb.comments.some(x => x.model !== null || x.metric !== "author_rating")) {
+            throw new Error("Cloud version must not represent ratings as AI sentiment");
+          }
+          console.log("PASS: live TMDB reviews retrieved:",tmdb.comments.length,"author-rated:",analysis.summary?.rated);
+          console.log("PASS: production CineSense live API end-to-end smoke");
+          NODE
