@@ -86,7 +86,7 @@ export default function MultiSourcePage(){
       if(ordinary.length){
         requests.push(postJson("/api/analyze-movie",{
           sources:ordinary,tmdbId:selectedMovie?.id,youtubeVideoId,maxComments:Number(maxComments)
-        }).then(data=>({type:"ordinary",data})));
+        },scraperKey).then(data=>({type:"ordinary",data})));
       }
       if(sources.includes("digimoviez")){
         requests.push(postJson("/api/fetch-comments",{
@@ -161,7 +161,7 @@ export default function MultiSourcePage(){
   const score=summary=>summary?.positivePercent==null?"داده کافی وجود ندارد":summary.positivePercent+"٪";
   const disabled=loading||!sources.length||sources.some(s=>!providers?.[s]?.enabled)
     ||(sources.includes("tmdb")&&!selectedMovie)
-    ||(sources.includes("youtube")&&!/^[A-Za-z0-9_-]{11}$/.test(youtubeVideoId))
+    ||(sources.includes("youtube")&&(!/^[A-Za-z0-9_-]{11}$/.test(youtubeVideoId)||!scraperKey.trim()))
     ||(sources.includes("digimoviez")&&(!/^https:\/\//.test(digimoviezUrl)||!scraperKey.trim()))
     ||Number(maxComments)<1||Number(maxComments)>30;
   const filmCount=result?.sources.filter(g=>g.category==="film").reduce((n,g)=>n+g.comments.length,0)||0;
@@ -197,8 +197,8 @@ export default function MultiSourcePage(){
     {sources.includes("digimoviez")&&<TextField fullWidth margin="normal"
       label="لینک HTTPS صفحه فیلم در DigiMoviez"
       value={digimoviezUrl} onChange={e=>setDigimoviezUrl(e.target.value)}/>}
-    {sources.includes("digimoviez")&&<TextField fullWidth margin="normal" type="password" autoComplete="off"
-      label="کد دسترسی خصوصی استخراج DigiMoviez" value={scraperKey}
+    {(sources.includes("digimoviez")||sources.includes("youtube"))&&<TextField fullWidth margin="normal" type="password" autoComplete="off"
+      label="کد دسترسی خصوصی DigiMoviez / YouTube" value={scraperKey}
       onChange={e=>setScraperKey(e.target.value)} helperText="برای محافظت از سهمیه رایگان سرور؛ فقط نزد مالک پروژه است." />}
     {sources.includes("youtube")&&<TextField fullWidth margin="normal"
       label="شناسه ۱۱ کاراکتری تریلر YouTube"
