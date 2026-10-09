@@ -7,13 +7,13 @@ const { summarize } = require("./summary");
 
 async function analyzeRawReviews(reviews) {
   if (!reviews.length) return [];
-  const analyzed = await analyzeComments(reviews.map(r => r.text));
+  const analyzed = await analyzeComments(reviews.map(r => String(r.text).slice(0, 12000)));
   if (analyzed.length !== reviews.length) throw new RequestError("AI returned an incomplete result.", 502);
   return reviews.map((review, index) => ({
     ...review, sentiment: analyzed[index].sentiment,
     positive: analyzed[index].positive, negative: analyzed[index].negative,
-    neutral: analyzed[index].neutral || "0.00%",
-    model: analyzed[index].model || "unknown",
+    neutral: analyzed[index].neutral ?? null,
+    model: analyzed[index].model || "unknown", language: analyzed[index].language || null,
   }));
 }
 
