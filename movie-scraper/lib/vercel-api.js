@@ -16,6 +16,7 @@ export class ApiError extends Error {
 export function available() {
   return {
     tmdb: { enabled: Boolean(process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_KEY), type: "film", metric: "author_rating" },
+    persianModel: { enabled: Boolean(process.env.PERSIAN_BROWSER_MODEL_ID), model: process.env.PERSIAN_BROWSER_MODEL_ID || null, type: "browser_ai", note: "Requires a verified public Transformers.js-compatible Persian ONNX repository." },
     youtube: { enabled: Boolean(process.env.YOUTUBE_API_KEY), type: "trailer", metric: "unclassified" },
     digimoviez: { enabled: Boolean(process.env.CINESENSE_SCRAPER_ACCESS_CODE?.length >= 24), type: "film", requiresUrl: true, requiresAccessCode: true, experimental: true, metric: "browser_ai_optional" },
   };
