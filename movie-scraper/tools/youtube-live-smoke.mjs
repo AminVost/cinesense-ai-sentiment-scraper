@@ -2,8 +2,8 @@
 // Does not print/forward the API key or include it in logs.
 import { analyzeMovie } from "../lib/vercel-api.js";
 
-if (process.env.VERCEL_ENV !== "preview") {
-  console.log("YOUTUBE_AUTO_DISCOVERY_SMOKE skipped outside preview.");
+if (process.env.CINESENSE_AUTO_DISCOVERY_SMOKE !== "1") {
+  console.log("YOUTUBE_AUTO_DISCOVERY_SMOKE disabled by default; enable explicitly for an authorized one-off build.");
 } else if (!process.env.YOUTUBE_API_KEY?.trim() || !process.env.TMDB_READ_ACCESS_TOKEN?.trim()) {
   console.log("YOUTUBE_AUTO_DISCOVERY_SMOKE unavailable: missing server-only credentials.");
 } else {
