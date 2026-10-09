@@ -28,8 +28,9 @@ jobs:
               const errors=[];
               page.on("pageerror",e=>errors.push(String(e.message).slice(0,190)));
               const response=await page.goto(base+"/multi-source",{waitUntil:"domcontentloaded",timeout:40000});
+              console.log("PREVIEW_DIAGNOSTIC",JSON.stringify({status:response.status(),title:await page.title(),url:page.url(),text:(await page.locator("body").innerText()).slice(0,300)}));
               if(response.status()!==200)throw Error("HTTP "+response.status());
-              await page.getByText("هر فیلم، هزار نگاه.").waitFor({timeout:15000});
+              await page.locator(".cs-app h1").waitFor({timeout:15000});
               await page.getByPlaceholder("مثلاً Interstellar یا Inception").fill("Interstellar");
               await page.getByRole("option").first().waitFor({timeout:20000});
               await page.getByRole("option").first().click();
