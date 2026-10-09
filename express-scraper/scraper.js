@@ -1,6 +1,7 @@
 const { chromium } = require("playwright");
 const { analyzeComments } = require("./analyzeComments");
 const logger = require("./logger");
+const { validateMovieUrl } = require("./lib/validation");
 
 // Global browser instance to avoid the 3-second cold start overhead per request
 let globalBrowser = null;
@@ -43,6 +44,13 @@ async function fetchComments(url, maxComments = 20) {
     });
 
     logger.info(`Navigating to URL: ${url}`);
+    await page.route("**/*", async (route) => {
+      if (route.request().isNavigationRequest()) {
+        try { validateMovieUrl(route.request().url()); }
+        catch (_) { return route.abort(); }
+      }
+      return route.fallback();
+    });
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     logMemoryUsage("After Page Load");
