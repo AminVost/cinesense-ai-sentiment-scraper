@@ -1,20 +1,25 @@
 import { jsonError, readInput } from "../../../lib/vercel-api";
 import { isAuthorizedScrape, scraperEnabled } from "../../../lib/scraper-access";
-import { scrapeDigiMoviez } from "../../../lib/digimoviez";
+import { discoverAndScrapeDigiMoviez } from "../../../lib/digimoviez";
 
 export const runtime="nodejs";
 export const maxDuration=60;
-export async function POST(req){
+export async function POST(request){
   if(!scraperEnabled())return Response.json({error:"Scraper access code is not configured."},
     {status:503,headers:{"Cache-Control":"no-store"}});
-  if(!isAuthorizedScrape(req))return Response.json({error:"Incorrect scraper access code."},
+  if(!isAuthorizedScrape(request))return Response.json({error:"Incorrect private access code."},
     {status:401,headers:{"Cache-Control":"no-store"}});
-  try{
-    const data=await readInput(req);
-    if(!Number.isInteger(data.maxComments)||data.maxComments<1||data.maxComments>10)
-      return Response.json({error:"Select 1–10 comments."},{status:400});
-    const extracted=await scrapeDigiMoviez(data.url,data.maxComments);
-    return Response.json({comments:extracted.reviews,hasMore:extracted.hasMore,totalComments:extracted.reviews.length},
-      {headers:{"Cache-Control":"no-store"}});
-  }catch(e){return jsonError(e);}
+  try {
+    const input=await readInput(request);
+    const max=input.maxComments===undefined?10:Number(input.maxComments);
+    if(!Number.isInteger(max)||max<1||max>10)
+      return Response.json({error:"Select 1–10 DigiMoviez comments."},{status:400});
+    if(!Number.isSafeInteger(Number(input.tmdbId))||Number(input.tmdbId)<1)
+      return Response.json({error:"Choose a movie by name before searching DigiMoviez."},{status:400});
+    const extracted=await discoverAndScrapeDigiMoviez(Number(input.tmdbId),max);
+    return Response.json({
+      comments:extracted.reviews,matchedSource:extracted.matchedSource,
+      hasMore:extracted.hasMore,totalComments:extracted.reviews.length,
+    },{headers:{"Cache-Control":"no-store"}});
+  } catch(error){return jsonError(error);}
 }

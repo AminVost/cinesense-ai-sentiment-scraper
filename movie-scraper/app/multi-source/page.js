@@ -32,8 +32,6 @@ export default function MultiSourcePage(){
   const [movies,setMovies]=useState([]);
   const [selectedMovie,setSelectedMovie]=useState(null);
   const [sources,setSources]=useState(["tmdb"]);
-  const [youtubeVideoId,setYoutubeVideoId]=useState("");
-  const [digimoviezUrl,setDigimoviezUrl]=useState("");
   const [scraperKey,setScraperKey]=useState("");
   const [maxComments,setMaxComments]=useState(10);
   const [providers,setProviders]=useState(null);
@@ -85,12 +83,12 @@ export default function MultiSourcePage(){
       const requests=[];
       if(ordinary.length){
         requests.push(postJson("/api/analyze-movie",{
-          sources:ordinary,tmdbId:selectedMovie?.id,youtubeVideoId,maxComments:Number(maxComments)
+          sources:ordinary,tmdbId:selectedMovie?.id,maxComments:Number(maxComments)
         },scraperKey).then(data=>({type:"ordinary",data})));
       }
       if(sources.includes("digimoviez")){
         requests.push(postJson("/api/fetch-comments",{
-          url:digimoviezUrl,maxComments:Math.min(10,Number(maxComments))
+          tmdbId:selectedMovie?.id,maxComments:Math.min(10,Number(maxComments))
         },scraperKey).then(data=>({type:"digimoviez",data})));
       }
       const settled=await Promise.allSettled(requests);
@@ -108,7 +106,7 @@ export default function MultiSourcePage(){
           originalSummary=data.summary;trailerSummary=data.trailerSummary;
         }else{
           const comments=data.comments||[];
-          groups.push({source:"digimoviez",category:"film",comments,hasMore:data.hasMore,
+          groups.push({source:"digimoviez",category:"film",comments,hasMore:data.hasMore,matchedSource:data.matchedSource,
             summary:metric(comments)});
         }
       });
@@ -159,20 +157,17 @@ export default function MultiSourcePage(){
 
   const stats=reviewAIStats(result,aiResults);
   const score=summary=>summary?.positivePercent==null?"داده کافی وجود ندارد":summary.positivePercent+"٪";
-  const disabled=loading||!sources.length||sources.some(s=>!providers?.[s]?.enabled)
-    ||(sources.includes("tmdb")&&!selectedMovie)
-    ||(sources.includes("youtube")&&(!/^[A-Za-z0-9_-]{11}$/.test(youtubeVideoId)||!scraperKey.trim()))
-    ||(sources.includes("digimoviez")&&(!/^https:\/\//.test(digimoviezUrl)||!scraperKey.trim()))
+  const disabled=loading||!sources.length||!selectedMovie||sources.some(s=>!providers?.[s]?.enabled)
+    ||((sources.includes("youtube")||sources.includes("digimoviez"))&&!scraperKey.trim())
     ||Number(maxComments)<1||Number(maxComments)>30;
   const filmCount=result?.sources.filter(g=>g.category==="film").reduce((n,g)=>n+g.comments.length,0)||0;
   return <Container maxWidth="md" sx={{py:5,direction:"rtl"}}>
     <Typography variant="h4" fontWeight={700} gutterBottom>CineSense</Typography>
     <Typography variant="h6" sx={{mb:2}}>تحلیل نظرات فیلم از منابع مختلف</Typography>
     <Alert severity="info" sx={{mb:2}}>
-      ابزار رایگان: TMDB و YouTube از API رسمی استفاده می‌کنند. DigiMoviez با مرورگر سرورلس
-      به‌صورت آزمایشی استخراج می‌شود. تحلیل AI به درخواست تو در مرورگر اجرا می‌شود؛ اولین استفاده
-      مستلزم دانلود حدود ۱۷۰ مگابایت مدل است. مدل فعلی انگلیسی و پنج زبان اروپایی دیگر را هدف می‌گیرد؛
-      متن فارسی فقط در صورت فعال بودن مدل فارسی ONNX مستقل تحلیل می‌شود؛ در غیر این صورت «نامشخص» باقی می‌ماند.
+      فقط فیلم را انتخاب کن؛ جست‌وجوی تریلر در YouTube و صفحه فیلم در DigiMoviez به‌صورت خودکار انجام می‌شود.
+      برای جلوگیری از اشتباه، عنوان و سال انتشار بررسی می‌شود و اگر تطبیق قابل اعتماد نباشد، آن منبع کنار گذاشته می‌شود.
+      تحلیل هوش مصنوعی با درخواست خودت در مرورگر اجرا می‌شود و اولین استفاده دانلود مدل را لازم دارد.
     </Alert>
     {error&&<Alert severity="error" sx={{mb:2}}>{error}</Alert>}
     {providers&&!providers.persianModel?.enabled&&<Alert severity="warning" sx={{mb:2}}>
@@ -187,22 +182,16 @@ export default function MultiSourcePage(){
           disabled={!providers?.[key]?.enabled}
           onChange={e=>toggle(key,e.target.checked)}/>} label={label}/>)}
     </Box>
-    {sources.includes("tmdb")&&<Autocomplete options={movies} value={selectedMovie}
+    <Autocomplete options={movies} value={selectedMovie}
       filterOptions={x=>x} isOptionEqualToValue={(a,b)=>a.id===b.id}
       getOptionLabel={movie=>typeof movie==="string"?movie:
         movie.title+(movie.release_date?" ("+movie.release_date.slice(0,4)+")":"")}
-      onChange={(_e,v)=>setSelectedMovie(v)}
-      inputValue={query} onInputChange={(_e,v)=>setQuery(v)}
-      renderInput={params=><TextField {...params} fullWidth margin="normal" label="نام فیلم را جست‌وجو و انتخاب کن"/>}/>}
-    {sources.includes("digimoviez")&&<TextField fullWidth margin="normal"
-      label="لینک HTTPS صفحه فیلم در DigiMoviez"
-      value={digimoviezUrl} onChange={e=>setDigimoviezUrl(e.target.value)}/>}
+      onChange={(_e,v)=>{setSelectedMovie(v);setResult(null);resetAnalysis();}}
+      inputValue={query} onInputChange={(_e,v,reason)=>{setQuery(v);if(reason==="input"){setSelectedMovie(null);setResult(null);resetAnalysis();}}}
+      renderInput={params=><TextField {...params} fullWidth margin="normal" label="نام فیلم را جست‌وجو و انتخاب کن" helperText="تنها انتخاب فیلم کافی است؛ CineSense خودش منبع مرتبط را پیدا می‌کند."/>}/>
     {(sources.includes("digimoviez")||sources.includes("youtube"))&&<TextField fullWidth margin="normal" type="password" autoComplete="off"
       label="کد دسترسی خصوصی DigiMoviez / YouTube" value={scraperKey}
       onChange={e=>setScraperKey(e.target.value)} helperText="برای محافظت از سهمیه رایگان سرور؛ فقط نزد مالک پروژه است." />}
-    {sources.includes("youtube")&&<TextField fullWidth margin="normal"
-      label="شناسه ۱۱ کاراکتری تریلر YouTube"
-      value={youtubeVideoId} onChange={e=>setYoutubeVideoId(e.target.value)}/>}
     <TextField type="number" margin="normal" fullWidth label="حداکثر تعداد نظرات هر منبع (۱ تا ۳۰)"
       value={maxComments} onChange={e=>setMaxComments(e.target.value)}
       inputProps={{min:1,max:30}}/>
@@ -238,6 +227,12 @@ export default function MultiSourcePage(){
       </Alert>)}
       {result.sources.map(group=><Card key={group.source} sx={{mb:2}}><CardContent>
         <Typography variant="h6">{LABELS[group.source]} — {group.comments.length} نظر</Typography>
+        {group.matchedSource&&<Box sx={{my:1,p:1.5,border:"1px solid #7773",borderRadius:1}}>
+          <Typography variant="body2">منبع تطبیق‌داده‌شده: {group.matchedSource.title}</Typography>
+          {group.matchedSource.channel&&<Typography variant="caption" display="block">کانال: {group.matchedSource.channel}</Typography>}
+          <Typography variant="caption" color="text.secondary" display="block">اعتماد تطبیق: {Math.round((group.matchedSource.confidence||0)*100)}٪ (تخمینی)</Typography>
+          <a href={group.matchedSource.url} target="_blank" rel="noopener noreferrer">مشاهده صفحه پیدا‌شده</a>
+        </Box>}
         {group.comments.map((comment,index)=>{
           const analysis=aiResults[keyFor(group.source,comment)];
           return <Box key={comment.id+"-"+index} sx={{borderTop:"1px solid #7773",py:2}}>
