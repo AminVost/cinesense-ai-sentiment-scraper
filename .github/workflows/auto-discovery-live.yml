@@ -1,0 +1,48 @@
+name: Live DigiMoviez automatic film matching
+on:
+  push:
+    branches: [feat/auto-discover-movie-sources]
+    paths: [.github/workflows/auto-discovery-live.yml]
+  workflow_dispatch:
+permissions: { contents: read }
+jobs:
+  auto-discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci --no-audit --no-fund
+        working-directory: movie-scraper
+      - name: Search by film name and confirm discovered film comments
+        working-directory: movie-scraper
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from 'playwright-core';
+          import {chooseMatchingCandidate,rankDigiCandidate} from './lib/movie-discovery.js';
+          const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
+          const context=await browser.newContext({serviceWorkers:'block'});
+          await context.route('**/*',route=>{
+            const url=new URL(route.request().url());
+            return (url.hostname==='digimoviez.com'||url.hostname==='www.digimoviez.com')
+              && !['image','media','font','stylesheet'].includes(route.request().resourceType())
+              ?route.continue():route.abort();
+          });
+          try{
+            const movie={id:157336,title:'Interstellar',original_title:'Interstellar',release_date:'2014-11-05'};
+            const page=await context.newPage();
+            const response=await page.goto('https://digimoviez.com/?s=Interstellar',{waitUntil:'domcontentloaded',timeout:25000});
+            if(response.status()!==200)throw Error('Movie search unavailable, status '+response.status());
+            const options=await page.locator('.title_h a[href]').evaluateAll(nodes=>
+              nodes.slice(0,30).map(a=>({id:a.href,url:a.href,title:(a.textContent||'').trim()})));
+            const candidates=options.filter(x=>/^https:\/\/digimoviez\.com\/[a-z0-9-]+\/$/.test(x.url));
+            const choice=chooseMatchingCandidate(candidates,x=>rankDigiCandidate(movie,x),0.79,0.075);
+            if(!choice.match||choice.match.url!=='https://digimoviez.com/interstellar-2014/')
+              throw Error('Incorrect auto-match: '+JSON.stringify({status:choice.status,candidates:choice.candidates.map(x=>({title:x.title,score:x.match.score}))}));
+            await page.goto(choice.match.url,{waitUntil:'domcontentloaded',timeout:22000});
+            const count=await page.locator('.comment_text_toggle p').count();
+            if(count<1)throw Error('Movie matched but no comment selector found');
+            console.log('PASS auto DigiMoviez match:',choice.match.url,'confidence:',choice.match.match.score.toFixed(2),'commentElements:',count);
+          }finally{await browser.close();}
+          NODE
