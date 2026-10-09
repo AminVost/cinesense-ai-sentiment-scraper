@@ -154,7 +154,7 @@ export default function MultiSourcePage(){
       setAiError("اجرای مدل روی مرورگر ممکن نشد؛ دسترسی به Hugging Face و CDN را بررسی کن.");
       worker.terminate();workerRef.current=null;
     };
-    worker.postMessage({id,comments});
+    worker.postMessage({id,comments,persianModelId:providers?.persianModel?.model||null});
   }
 
   const stats=reviewAIStats(result,aiResults);
@@ -172,9 +172,12 @@ export default function MultiSourcePage(){
       ابزار رایگان: TMDB و YouTube از API رسمی استفاده می‌کنند. DigiMoviez با مرورگر سرورلس
       به‌صورت آزمایشی استخراج می‌شود. تحلیل AI به درخواست تو در مرورگر اجرا می‌شود؛ اولین استفاده
       مستلزم دانلود حدود ۱۷۰ مگابایت مدل است. مدل فعلی انگلیسی و پنج زبان اروپایی دیگر را هدف می‌گیرد؛
-      متن فارسی و سایر زبان‌های پشتیبانی‌نشده «نامشخص» ثبت می‌شوند، نه مثبت یا منفی ساختگی.
+      متن فارسی فقط در صورت فعال بودن مدل فارسی ONNX مستقل تحلیل می‌شود؛ در غیر این صورت «نامشخص» باقی می‌ماند.
     </Alert>
     {error&&<Alert severity="error" sx={{mb:2}}>{error}</Alert>}
+    {providers&&!providers.persianModel?.enabled&&<Alert severity="warning" sx={{mb:2}}>
+      مدل فارسی مرورگری هنوز میزبانی و فعال نشده است؛ خروجی فارسی «نامشخص» خواهد بود.
+    </Alert>}
     {providers&&!providers.tmdb?.enabled&&<Alert severity="warning">
       کلید TMDB روی Vercel ثبت نشده است.
     </Alert>}
