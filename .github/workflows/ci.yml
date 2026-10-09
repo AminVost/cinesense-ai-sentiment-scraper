@@ -38,6 +38,9 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: npm ci --no-audit --no-fund --fetch-retries=1 --fetch-timeout=30000
+      - name: Run API integration tests with mocked providers
+        working-directory: express-scraper
+        run: npm run test:integration
   frontend-build:
     runs-on: ubuntu-latest
     timeout-minutes: 10
