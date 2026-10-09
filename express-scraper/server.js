@@ -1,30 +1,51 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const { fetchComments, closeScraper } = require("./scraper");
+const { fetchComments } = require("./scraper");
+const { analyzeMovie } = require("./lib/multiSource");
+const { positiveInt, validateMovieUrl, RequestError } = require("./lib/validation");
+const tmdb = require("./providers/tmdb");
+const youtube = require("./providers/youtube");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+app.use(express.json({ limit: "16kb" }));
+const origins = (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000").split(",");
+app.use(cors({ origin(origin, callback) {
+  if (!origin || origins.includes(origin)) return callback(null, true);
+  return callback(new RequestError("Origin not allowed.", 403));
+} }));
 
-app.use(express.json());
-app.use(cors());
+function replyError(res, error) {
+  console.error("[API]", error.message);
+  return res.status(error.status || 500).json({ error: error.status ? error.message : "Internal Server Error" });
+}
+
+app.get("/api/providers", (_req, res) => res.json({
+  tmdb: { enabled: tmdb.configured(), type: "movie" },
+  digimoviez: { enabled: true, type: "movie", requiresUrl: true },
+  youtube: { enabled: youtube.configured(), type: "trailer", requiresVideoId: true },
+}));
+
+app.post("/api/search-movie", async (req, res) => {
+  try { res.json({ results: await tmdb.searchMovies(req.body?.query) }); }
+  catch (error) { replyError(res, error); }
+});
+
+app.post("/api/analyze-movie", async (req, res) => {
+  try { res.json(await analyzeMovie(req.body)); }
+  catch (error) { replyError(res, error); }
+});
 
 app.post("/api/fetch-comments", async (req, res) => {
   try {
-    const { url , maxComments } = req.body;
-
-    if (!url) {
-      return res.status(400).json({ error: "URL is required" });
-    }
-
-    const result = await fetchComments(url ,maxComments);
+    const url = validateMovieUrl(req.body?.url);
+    const maxComments = positiveInt(req.body?.maxComments, 20, 100);
+    const result = await fetchComments(url, maxComments);
+    if (result.error) throw new RequestError(result.error, 502);
     res.json(result);
-  } catch (error) { 
-    console.error("❌ Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  } catch (error) { replyError(res, error); }
 });
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(Number(process.env.PORT) || 5000, () => console.log("CineSense scraper API started"));
+}
+module.exports = app;
