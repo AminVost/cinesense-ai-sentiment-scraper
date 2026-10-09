@@ -15,7 +15,7 @@ CineSense is a self-hosted prototype that collects permitted film reviews and cl
 
 ## Deploy on Vercel Hobby
 
-Import the GitHub repository as a **new Vercel project** using Root Directory `movie-scraper`. Configure a server-only `TMDB_READ_ACCESS_TOKEN` in the project settings. The Vercel-compatible API routes are built into Next.js and do not require Express/Python for official source reviews. This **reduced cloud edition** shows original review text and explicit TMDB review-author ratings; it does not perform AI inference and leaves Playwright scraping disabled. For the subdomain `cinesense.aminvost.ir`, see [VERCEL_DEPLOY.md](movie-scraper/VERCEL_DEPLOY.md). Vercel Hobby and TMDB developer API are for non-commercial usage subject to their conditions.
+Import the GitHub repository as a **new Vercel project** using Root Directory `movie-scraper`. Configure a server-only `TMDB_READ_ACCESS_TOKEN` in the project settings. The Vercel-compatible API routes are built into Next.js and do not require Express/Python for official source reviews. The cloud edition supports **browser-local, opt-in sentiment inference** with a quantized Hugging Face model (approximately 168 MB on first load) and an **experimental bounded Playwright scraper** for DigiMoviez on Vercel Functions. Browser AI supports English and five European languages; Persian model inference remains in the local Python service. The cloud UI shows author ratings and AI-inferred text sentiment separately; neither is a verified audience-satisfaction survey. DigiMoviez availability depends on the site's reachability, selectors, and permission to scrape. For the subdomain `cinesense.aminvost.ir`, see [VERCEL_DEPLOY.md](movie-scraper/VERCEL_DEPLOY.md). Vercel Hobby and TMDB developer API are for non-commercial usage subject to their conditions.
 
 ## Start locally
 
@@ -33,7 +33,8 @@ Requirements: Node.js 22, Python 3.10+, Chromium for Playwright, available RAM f
 - `GET /api/providers`: currently configured providers
 - `POST /api/search-movie`: `{"query":"Interstellar"}`
 - `POST /api/analyze-movie`: `{"tmdbId":157336,"sources":["tmdb"],"maxComments":20}`
-- Add `digimoviezUrl` for `digimoviez` or `youtubeVideoId` for `youtube`. The latter is an **11-character ID**, not a full URL.
+- For Vercel: use `POST /api/fetch-comments` with `{ "url": "https://digimoviez44.top/your-movie/", "maxComments": 10 }`; this on-demand Chromium endpoint is **experimental**. YouTube accepts `youtubeVideoId` (an 11-character ID).
+- For self-hosted Express only: `POST /api/analyze-movie` also accepts `digimoviez` as a source.
 - `POST /api/fetch-comments`: compatible legacy endpoint, restricted to enabled HTTPS movie hosts
 
 Returned `sources[]` each have their own data, `summary` covers film reviews only, `trailerSummary` covers YouTube only, and `errors[]` indicates partial failures.
