@@ -1,8 +1,9 @@
+"use client";
 import { useState } from "react";
 import { TextField, Button, Slide, CircularProgress } from "@mui/material";
 import { toast } from "react-toastify";
 
-export default function CommentForm() {
+export default function CommentForm({ onComments }) {
   const [url, setUrl] = useState("");
   const [maxComments, setMaxComments] = useState(20);
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function CommentForm() {
       if (data.error) {
         toast.error(`🚨 خطا: ${data.error}`);
       } else {
-        setComments(data.comments || []);
+        onComments?.(data.comments || []);
       }
     } catch (error) {
       toast.error("🚨 خطای سرور، لطفاً دوباره اfdsfdsfdsمتحان کنید." , error);
