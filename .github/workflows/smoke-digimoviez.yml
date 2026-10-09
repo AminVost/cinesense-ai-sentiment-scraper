@@ -1,4 +1,4 @@
-name: DigiMoviez live smoke (nonblocking provider check)
+name: DigiMoviez protected endpoint smoke
 on:
   push:
     branches: [feat/free-multi-source-reviews]
@@ -7,21 +7,20 @@ on:
 permissions:
   contents: read
 jobs:
-  movie-source:
+  private-scraper:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Check bounded on-demand DigiMoviez scraper
+      - name: Check unauthenticated scraping is blocked
         run: |
           node --input-type=module <<'NODE'
           const response=await fetch("https://cinesense.aminvost.ir/api/fetch-comments",{
-            method:"POST",headers:{"Content-Type":"application/json"},
+            method:"POST",headers:{"content-type":"application/json"},
             body:JSON.stringify({url:"https://digimoviez.com/the-invite-2026/",maxComments:3}),
-            signal:AbortSignal.timeout(80000)
+            signal:AbortSignal.timeout(20000)
           });
-          const body=await response.json().catch(()=>({error:"Invalid JSON response"}));
-          console.log("DigiMoviez HTTP",response.status);
-          if(!response.ok)throw Error("Third-party site unavailable or extractor failed: "+(body.error||"Unknown"));
-          if(!Array.isArray(body.comments)||!body.comments.length)throw Error("No comments extracted.");
-          console.log("DigiMoviez live comments:",body.comments.length,"of",body.totalComments);
+          if(response.status!==401){
+            throw Error("Expensive browser endpoint must be protected; received HTTP "+response.status);
+          }
+          console.log("PASS: private scraper rejects unauthenticated calls without launching Chromium.");
           NODE
