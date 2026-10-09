@@ -2,7 +2,11 @@
 
 The web frontend is in **`movie-scraper/`**, not the repository root. This folder now contains self-contained Next.js API routes for **TMDB** movie lookup/reviews and optional **YouTube** trailer comments.
 
-> The existing Express + Playwright and Python BERT services are not bundled into the Vercel app. The cloud edition displays TMDB author's explicit numeric ratings (if present) and the raw review text; it does **not** label that result as AI sentiment. YouTube trailer comments are separate and unclassified. A complete AI+scraping installation still requires appropriate independent hosting.
+> The cloud edition uses **two extra free approaches** beyond the TMDB/YouTube Next.js APIs:
+- **Browser-local AI:** User explicitly starts sentiment inference in their own browser using the quantized open-source `Xenova/bert-base-multilingual-uncased-sentiment` model (~168 MB first download, cached afterward). No paid AI calls or backend compute. It targets English/French/German/Spanish/Italian/Dutch; Persian and unsupported scripts remain **Unclassified**. This is an inference estimate, not verified human satisfaction.
+- **Experimental on-demand DigiMoviez scraper:** `/api/fetch-comments` starts a tightly bounded Chromium process using Playwright and `@sparticuz/chromium` on Vercel. Up to 10 comments per request, max three page interactions, URL host allowlist. There is no anti-bot bypass; extraction may fail due to site outages, permission, structural changes or host blocks. Respect the site's terms before enabling or advertising production reliability.
+
+The original Python Persian model and Express scraper remain available for self-hosting but are not the cloud functions. AI model download may be slow or inaccessible on users' networks.
 
 ## Vercel project setup
 
@@ -26,7 +30,7 @@ The web frontend is in **`movie-scraper/`**, not the repository root. This folde
 ## Notes
 
 - The Vercel IP/location does **not guarantee** TMDB reachability or reachability of your site from every Iranian ISP; verify with a real deployment.
-- The included application is suitable for personal/non-commercial use within Vercel Hobby included limits, not as an unlimited public paid SaaS.
+- The Hobby plan has finite included Function CPU time, invocations, and bandwidth; intensive repeated browser scrapes could hit usage limits. This is **not an unlimited free public SaaS**. Implement authentication/quotas if publicly exposing scraping, and disable it if terms do not permit automated access.
 - The TMDB API also requires attribution and an approved TMDB logo. The UI includes the official TMDB logo and disclaimer.
 - The application enforces up to **30 reviews per provider per request**, with a maximum of three TMDB pages, a 12-second outbound timeout and a ten-minute TMDB upstream cache.
 - Do not share TMDB secrets in chat, screenshots, Git, or client-side code.
