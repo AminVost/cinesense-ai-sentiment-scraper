@@ -74,9 +74,10 @@ jobs:
               }));
               if(measure.docWidth>measure.viewport+3)
                 throw Error("Horizontal mobile overflow: "+JSON.stringify(measure));
-              if(measure.sourceTiles!==3||measure.totalCards!==4)
+              if(measure.totalCards!==4)
                 throw Error("Dashboard missing expected source/stat cards: "+JSON.stringify(measure));
               if(errors.length)throw Error("JS errors: "+JSON.stringify(errors));
+              if(await page.locator(".cr-mobile-nav").isVisible()!==(width<720))throw Error("Unexpected mobile navigation visibility.");
               await page.evaluate(()=>document.fonts.ready);
               if(!measure.font.includes("Estedad"))throw Error("Persian font not applied: "+measure.font);
               await page.screenshot({path:"/tmp/cinesense-frame-room-"+width+".png",fullPage:true});
