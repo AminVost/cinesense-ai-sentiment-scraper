@@ -6,8 +6,7 @@
 import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1";
 const MODEL = "Xenova/bert-base-multilingual-uncased-sentiment";
 const SUPPORTED = ["en", "de", "fr", "es", "it", "nl"];
-env.allowLocalModels = true;
-env.localModelPath = "/models/";
+env.allowLocalModels = false;
 let classifierPromise;
 let persianClassifierPromise;
 
