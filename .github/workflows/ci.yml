@@ -24,7 +24,9 @@ jobs:
             node --check "$f"
           done
       - name: Python syntax check
-        run: python3 -m py_compile bertModel/fastApi.py
+        run: |
+          python3 -m py_compile bertModel/fastApi.py bertModel/hooshFineTune.py
+          python3 -m unittest discover -s bertModel/tests -p 'test_*.py'
   backend-dependencies:
     runs-on: ubuntu-latest
     timeout-minutes: 8
