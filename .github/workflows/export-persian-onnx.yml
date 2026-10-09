@@ -1,6 +1,9 @@
 name: Export Persian sentiment ONNX
 on:
   workflow_dispatch:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths: [.github/workflows/export-persian-onnx.yml]
 permissions:
   contents: read
 jobs:
