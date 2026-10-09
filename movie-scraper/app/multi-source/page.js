@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Autocomplete, TextField } from "@mui/material";
-import "./cinesense-v2.css";
+import "./cinesense-frame-room.css";
 
 const LABELS = { tmdb: "TMDB", youtube: "YouTube (تریلر)", digimoviez: "DigiMoviez (آزمایشی)" };
 const LABEL_FA = {Positive:"مثبت",Negative:"منفی",Neutral:"خنثی",Unclassified:"نامشخص"};
-const SOURCES = [{id:"tmdb",name:"TMDB",desc:"نقدهای فیلم",tone:"#92e6cc",icon:"film"},{id:"youtube",name:"YouTube",desc:"واکنش‌های تریلر",tone:"#f49f9d",icon:"play"},{id:"digimoviez",name:"DigiMoviez",desc:"نظرات فارسی",tone:"#b6a4ff",icon:"chat"}];
+const SOURCES = [{id:"tmdb",name:"TMDB",desc:"نقدهای فیلم",tone:"#b7c69f",icon:"film"},{id:"youtube",name:"YouTube",desc:"واکنش‌های تریلر",tone:"#ed8c7a",icon:"play"},{id:"digimoviez",name:"DigiMoviez",desc:"نظرات فارسی",tone:"#ed6748",icon:"chat"}];
 const poster = movie => /^\/[\w.-]+\.(jpg|png|webp)$/i.test(movie?.poster_path || "") ? "https://image.tmdb.org/t/p/w185" + movie.poster_path : null;
 function Icon({name,size=18}){
   const paths={
@@ -59,6 +59,7 @@ export default function MultiSourcePage(){
   const [scraperKey,setScraperKey]=useState("");
   const [maxComments,setMaxComments]=useState(10);
   const [secretVisible,setSecretVisible]=useState(false);
+  const [view,setView]=useState("studio");
   const [activeSource,setActiveSource]=useState("all");
   const [activeSentiment,setActiveSentiment]=useState("all");
   const [commentKeyword,setCommentKeyword]=useState("");
@@ -108,7 +109,7 @@ export default function MultiSourcePage(){
   }
   function toggle(source,checked){
     setSources(prev=>checked?[...prev,source]:prev.filter(s=>s!==source));
-    setResult(null);resetAnalysis();
+    setResult(null);resetAnalysis();setView("studio");
   }
   async function submit(){
     setError("");setResult(null);resetAnalysis();setLoading(true);
@@ -150,6 +151,7 @@ export default function MultiSourcePage(){
         summary:originalSummary||{total:0,rated:0,positivePercent:null,averageRating:null},
         trailerSummary:trailerSummary||{total:0,positivePercent:null}
       });
+      setActiveSource("all");setActiveSentiment("all");setCommentKeyword("");setPageSize(8);setView("report");
     }catch(e){setError(e.message);}
     finally{setLoading(false);}
   }
@@ -201,329 +203,309 @@ export default function MultiSourcePage(){
   const visible=displayed.filter(item=>(activeSource==="all"||item.group.source===activeSource) &&
     (activeSentiment==="all"||(item.ai?.sentiment||"Unclassified")===activeSentiment) &&
     (!commentKeyword.trim()||String(item.comment.text+" "+(item.comment.author||"")).toLocaleLowerCase().includes(commentKeyword.trim().toLocaleLowerCase())));
-  const segments=[{id:"Positive",color:"#92e6cc",name:"مثبت"},{id:"Neutral",color:"#ebc986",name:"خنثی"},
-    {id:"Negative",color:"#f49f9d",name:"منفی"},{id:"Unclassified",color:"#555b78",name:"تحلیل‌نشده"}];
+  const segments=[{id:"Positive",color:"#b7c69f",name:"مثبت"},{id:"Neutral",color:"#ebc986",name:"خنثی"},
+    {id:"Negative",color:"#ed8c7a",name:"منفی"},{id:"Unclassified",color:"#555b78",name:"تحلیل‌نشده"}];
   const filmValues=segments.map(seg=>({...seg,count:result?.sources.filter(g=>g.category==="film").flatMap(g=>g.comments)
     .filter(c=>(aiResults[keyFor(c.source,c)]?.sentiment||"Unclassified")===seg.id).length||0}));
   const classified=stats?.classified||0;
   const pct=(count,total)=>total?Math.round(100*count/total):0;
   const pos=filmValues[0].count,neu=filmValues[1].count,neg=filmValues[2].count;
-  const gradient=filmCount? "conic-gradient(#92e6cc 0 "+pct(pos,filmCount)+"%,#ebc986 "+pct(pos,filmCount)+"% "+pct(pos+neu,filmCount)+"%,#f49f9d "+pct(pos+neu,filmCount)+"% "+pct(pos+neu+neg,filmCount)+"%,#555b78 "+pct(pos+neu+neg,filmCount)+"% 100%)":"#555b78";
+  const gradient=filmCount? "conic-gradient(#b7c69f 0 "+pct(pos,filmCount)+"%,#ebc986 "+pct(pos,filmCount)+"% "+pct(pos+neu,filmCount)+"%,#ed8c7a "+pct(pos+neu,filmCount)+"% "+pct(pos+neu+neg,filmCount)+"%,#555b78 "+pct(pos+neu+neg,filmCount)+"% 100%)":"#555b78";
   const protectedSelected=sources.includes("youtube")||sources.includes("digimoviez");
 
-  return <main className="cs-app" dir="rtl">
-    <div className="cs-container">
-      <header className="cs-header">
-        <a className="cs-brand" href="/" aria-label="CineSense، صفحه اصلی">
-          <span className="cs-logo"><Icon name="film" size={23}/></span>
-          <span className="cs-brand-word">Cine<span>Sense</span></span>
-        </a>
-        <nav className="cs-header-side" aria-label="منوی اصلی">
-          <a href="#workspace" className="cs-nav-link">استودیوی تحلیل</a>
-          <a href="#how-it-works" className="cs-nav-link">نحوه کار</a>
-          <span className="cs-live-chip"><span className="cs-live-dot"/> هوش مصنوعی محلی</span>
-        </nav>
+  return <main className="cr-shell" dir="rtl">
+    <aside className="cr-rail" aria-label="نوار ابزار CineSense">
+      <a href="/" className="cr-mark" aria-label="CineSense">C<span style={{color:"#ed6748"}}>/</span>S</a>
+      <div className="cr-rail-links">
+        {[
+          ["studio","search","جست‌وجوی فیلم"],
+          ["report","graph","گزارش فیلم"],
+          ["reviews","chat","نظرات"]
+        ].map(item=><button key={item[0]} type="button" className="cr-nav"
+          aria-label={item[2]} title={item[2]} aria-current={view===item[0]?"page":undefined}
+          data-current={view===item[0]} disabled={item[0]!=="studio"&&!result}
+          onClick={()=>setView(item[0])}><Icon name={item[1]} size={21}/></button>)}
+      </div>
+      <span className="cr-rail-bottom">FRAME ROOM / CINESENSE</span>
+    </aside>
+
+    <div className="cr-page">
+      <header className="cr-top">
+        <div className="cr-brand">CineSense <small>اتاق تحلیل فیلم</small></div>
+        <div className="cr-top-end">
+          <span className="cr-top-code">FRAME / 001</span>
+          <span className="cr-online"><i/> موتور تحلیل آماده</span>
+        </div>
       </header>
-
-      <section className="cs-hero" aria-labelledby="cs-hero-heading">
-        <div>
-          <div className="cs-eyebrow">CINEMATIC INTELLIGENCE / V2</div>
-          <h1 id="cs-hero-heading">هر فیلم، هزار نگاه.<span>یک تحلیل روشن.</span></h1>
-          <p className="cs-hero-desc">فراتر از امتیازها برو. یک فیلم را انتخاب کن تا CineSense
-            نظرات منابع مختلف را به صورت خودکار پیدا کند و با هوش مصنوعی رایگان تحلیل کند.</p>
-          <div className="cs-hero-trust">
-            <span><Icon name="check" size={16}/> بدون وارد کردن لینک</span>
-            <span><Icon name="shield" size={16}/> حریم خصوصی</span>
-            <span><Icon name="spark" size={16}/> بدون API هوش مصنوعی پولی</span>
+      <div className="cr-main">
+        <div className="cr-headline">
+          <div>
+            <div className="cr-overline">{view==="studio"?"01 / DISCOVER":view==="report"?"02 / DECODE":"03 / REVIEWS"}</div>
+            <h1 className="cr-title">{view==="studio"?"انتخاب فیلم":view==="report"?"تحلیل نظرات":"آرشیو نظرات"}</h1>
           </div>
+          <span className="cr-breadcrumb">CINESENSE / {view.toUpperCase()}</span>
         </div>
-        <div className="cs-art" aria-hidden="true">
-          <div className="cs-art-ring"/><div className="cs-art-ring"/><div className="cs-art-ring"/>
-          <div className="cs-orbit-center"><Icon name="spark" size={60}/></div>
-          <div className="cs-orbit-pill cs-a"><Icon name="film" size={15}/> MOVIE REVIEWS</div>
-          <div className="cs-orbit-pill cs-b"><Icon name="graph" size={15}/> SENTIMENT INSIGHTS</div>
-          <div className="cs-orbit-pill cs-c"><Icon name="bolt" size={15}/> LOCAL AI</div>
-        </div>
-      </section>
 
-      <section id="workspace" className="cs-workspace" aria-label="استودیوی جست‌وجو">
-        <div className="cs-panel cs-primary">
-          <div className="cs-panel-kicker"><Icon name="spark" size={15}/> ANALYSIS STUDIO</div>
-          <h2 className="cs-panel-title">از اینجا شروع کن</h2>
-          <p className="cs-panel-desc">فقط نام فیلم را انتخاب کن؛ پیدا کردن منابع با ما.</p>
-          <label className="cs-label" htmlFor="cs-movie-search">فیلم مورد نظرت</label>
-          <Autocomplete id="cs-movie-search" className="cs-search"
-            options={movies} value={selectedMovie} inputValue={query}
-            loading={searchBusy} filterOptions={items=>items}
-            disabled={!providers?.tmdb?.enabled||loading}
-            isOptionEqualToValue={(a,b)=>a.id===b.id}
-            getOptionLabel={movie=>typeof movie==="string"?movie:
-              movie.title+(movie.release_date?" ("+movie.release_date.slice(0,4)+")":"")}
-            onChange={(_e,v)=>{setSelectedMovie(v);setResult(null);resetAnalysis();setActiveSource("all");setActiveSentiment("all");setPageSize(8);}}
-            onInputChange={(_e,v,reason)=>{setQuery(v);if(reason==="input"||reason==="clear"){setSelectedMovie(null);setResult(null);resetAnalysis();}}}
-            noOptionsText={query.length<2?"حداقل دو حرف بنویس":"فیلمی پیدا نشد"}
-            loadingText="در حال جست‌وجوی فیلم..."
-            slotProps={{paper:{sx:{bgcolor:"#191c2a",color:"#f5f4fa",border:"1px solid #45405f",
-              borderRadius:"14px", "& .MuiAutocomplete-option.Mui-focused":{background:"#302b46!important"},
-              "& .MuiAutocomplete-option[aria-selected=true]":{background:"#3e345a!important"}}}}}
-            renderOption={(props,movie)=>{
-              const {key,...rest}=props;
-              return <li key={key} {...rest} style={{display:"flex",gap:12,alignItems:"center",direction:"rtl",padding:10}}>
-                <Poster movie={movie}/>
-                <span><strong style={{fontSize:12}}>{movie.title}</strong>
-                <span style={{display:"block",fontSize:11,color:"#a9a1c0"}}>{movie.release_date?.slice(0,4)||"بدون سال"}</span></span>
-              </li>;
-            }}
-            renderInput={params=><TextField {...params} placeholder="مثلاً Interstellar یا Inception"
-              inputProps={{...params.inputProps,"aria-label":"جست‌وجوی نام فیلم"}}/>}
-          />
-          {selectedMovie&&<div className="cs-selected-movie">
-            <Poster movie={selectedMovie}/>
-            <div><p className="cs-movie-title">{selectedMovie.title}</p>
-              <div className="cs-movie-meta">{selectedMovie.release_date?.slice(0,4)||"—"} · فیلم انتخاب شد</div></div>
-            <span style={{marginRight:"auto",color:"#92e6cc"}}><Icon name="check" size={20}/></span>
-          </div>}
+        {view==="studio"&&<section className="cr-workarea" aria-label="انتخاب فیلم و منابع">
+          <div className="cr-console">
+            <div className="cr-console-top">
+              <span className="cr-console-code">NEW SESSION / 01</span>
+              <span className="cr-light-pair"><i/><i/><i/></span>
+            </div>
+            <div className="cr-console-inner">
+              <label className="cr-fieldlabel" htmlFor="cr-movie">
+                <span>جست‌وجوی فیلم</span><small>عنوان فیلم</small>
+              </label>
+              <Autocomplete id="cr-movie" className="cr-search" options={movies} value={selectedMovie}
+                inputValue={query} loading={searchBusy}
+                disabled={!providers?.tmdb?.enabled||loading}
+                filterOptions={a=>a}
+                isOptionEqualToValue={(a,b)=>a.id===b.id}
+                getOptionLabel={movie=>typeof movie==="string"?movie:
+                  movie.title+(movie.release_date?" ("+movie.release_date.slice(0,4)+")":"")}
+                onChange={(_e,v)=>{setSelectedMovie(v);setResult(null);resetAnalysis();}}
+                onInputChange={(_e,v,reason)=>{setQuery(v);if(reason==="input"||reason==="clear"){setSelectedMovie(null);setResult(null);resetAnalysis();}}}
+                noOptionsText={query.trim().length<2?"حداقل دو حرف بنویس":"فیلمی پیدا نشد"}
+                loadingText="در حال جست‌وجو..."
+                slotProps={{paper:{sx:{
+                  background:"#24261f",color:"#eae7dd",border:"1px solid #5b594a",borderRadius:0,
+                  "& .MuiAutocomplete-option.Mui-focused":{background:"#38382f!important"},
+                  "& .MuiAutocomplete-option[aria-selected=true]":{background:"#403429!important"}
+                }}}}
+                renderOption={(props,movie)=>{
+                  const {key,...rest}=props;
+                  return <li key={key} {...rest} style={{display:"flex",gap:10,alignItems:"center",direction:"rtl",padding:8}}>
+                    {poster(movie)?<img src={poster(movie)} alt="" width={35} height={51} style={{objectFit:"cover"}}/>:
+                      <span style={{width:35,height:51,background:"#383a33",display:"grid",placeItems:"center"}}><Icon name="film"/></span>}
+                    <span><strong style={{fontSize:12}}>{movie.title}</strong>
+                      <span style={{display:"block",fontSize:10,color:"#ada99d"}}>{movie.release_date?.slice(0,4)||"—"}</span></span>
+                  </li>;
+                }}
+                renderInput={params=><TextField {...params} placeholder="Interstellar, Oppenheimer ..."
+                  inputProps={{...params.inputProps,"aria-label":"عنوان فیلم"}}/>}
+              />
 
-          <div className="cs-source-heading">
-            <span className="cs-label">منابع داده</span>
-            <span className="cs-source-note">می‌توانی چند منبع انتخاب کنی</span>
-          </div>
-          <div className="cs-sources">
-            {SOURCES.map(source=><button type="button" key={source.id} className="cs-source"
-              data-source={source.id} data-checked={sources.includes(source.id)}
-              aria-pressed={sources.includes(source.id)}
-              disabled={!providers?.[source.id]?.enabled||loading}
-              onClick={()=>{toggle(source.id,!sources.includes(source.id));setActiveSource("all");setActiveSentiment("all");setPageSize(8);}}>
-              <span className="cs-source-top">
-                <span className="cs-source-icon"><Icon name={source.icon} size={19}/></span>
-                <span className="cs-source-check">{sources.includes(source.id)&&<Icon name="check" size={13}/>}</span>
-              </span>
-              <span className="cs-source-name">{source.name}</span>
-              <span className="cs-source-sub">{providers?.[source.id]?.enabled?source.desc:"فعلاً در دسترس نیست"}</span>
-            </button>)}
-          </div>
-
-          <details className="cs-settings">
-            <summary><span><Icon name="sliders" size={16}/> تنظیمات پیشرفته و دسترسی منابع</span>
-              <Icon name="down" size={16} className="cs-down"/></summary>
-            <div className="cs-settings-body">
-              <div>
-                <label className="cs-label" htmlFor="cs-max">تعداد نظرات هر منبع</label>
-                <select id="cs-max" className="cs-field" value={maxComments}
-                  disabled={loading} onChange={e=>{setMaxComments(Number(e.target.value));setResult(null);resetAnalysis();}}>
-                  {[5,10,20,30].map(n=><option value={n} key={n}>{n} نظر</option>)}
-                </select>
-                <p className="cs-field-hint">DigiMoviez حداکثر ۱۰ نظر دریافت می‌کند.</p>
-              </div>
-              <div>
-                <label className="cs-label" htmlFor="cs-secret">کد خصوصی منابع محافظت‌شده</label>
-                <div style={{display:"flex",gap:6}}>
-                  <input className="cs-field" id="cs-secret" type={secretVisible?"text":"password"}
-                    autoComplete="off" value={scraperKey} onChange={e=>setScraperKey(e.target.value)}
-                    placeholder="کد دسترسی CineSense" aria-describedby="cs-secret-hint"/>
-                  <button className="cs-button-outline" type="button" onClick={()=>setSecretVisible(v=>!v)}
-                    aria-label={secretVisible?"پنهان کردن کد":"نمایش کد"} title={secretVisible?"پنهان کردن کد":"نمایش کد"}
-                    style={{minHeight:46,padding:"0 12px"}}><Icon name="eye" size={15}/></button>
+              <div className="cr-choice-block">
+                <div className="cr-fieldlabel">
+                  <span>منابع</span><small>{sources.length} منبع</small>
                 </div>
-                <p className="cs-field-hint" id="cs-secret-hint">برای YouTube و DigiMoviez؛ کد ذخیره نمی‌شود.</p>
+                <div className="cr-source-list" role="group" aria-label="انتخاب منبع نظرات">
+                  {SOURCES.map((source,index)=><button key={source.id} type="button" className="cr-source"
+                    data-on={sources.includes(source.id)} aria-pressed={sources.includes(source.id)}
+                    disabled={!providers?.[source.id]?.enabled||loading}
+                    onClick={()=>toggle(source.id,!sources.includes(source.id))}>
+                    <span className="cr-source-ident">
+                      <span className="cr-source-num">0{index+1}</span>
+                      <span className="cr-source-name">{source.name}</span>
+                    </span>
+                    <span className="cr-source-switch">{sources.includes(source.id)&&<Icon name="check" size={12}/>}</span>
+                  </button>)}
+                </div>
+              </div>
+
+              <details className="cr-access">
+                <summary><span style={{display:"flex",gap:8,alignItems:"center"}}><Icon name="sliders" size={15}/> تنظیمات</span>
+                  <Icon name="down" size={15}/></summary>
+                <div className="cr-access-grid">
+                  <div>
+                    <label htmlFor="cr-limit">تعداد نظر</label>
+                    <select className="cr-textfield" id="cr-limit" value={maxComments}
+                      disabled={loading} onChange={e=>setMaxComments(Number(e.target.value))}>
+                      {[5,10,20,30].map(n=><option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="cr-access-key">کد دسترسی منابع محافظت‌شده</label>
+                    <div className="cr-inline-eye">
+                      <input id="cr-access-key" className="cr-textfield" type={secretVisible?"text":"password"}
+                        autoComplete="off" value={scraperKey}
+                        onChange={e=>setScraperKey(e.target.value)} placeholder="کد خصوصی CineSense"/>
+                      <button className="cr-quiet-button" type="button" title={secretVisible?"پنهان‌کردن":"نمایش"}
+                        aria-label={secretVisible?"پنهان‌کردن کد":"نمایش کد"}
+                        onClick={()=>setSecretVisible(!secretVisible)}><Icon name="eye" size={16}/></button>
+                    </div>
+                  </div>
+                </div>
+              </details>
+              {protectedSelected&&!scraperKey.trim()&&<div className="cr-access-note">برای YouTube و DigiMoviez کد خصوصی را در تنظیمات وارد کن.</div>}
+              {error&&<div className="cr-status" data-danger="true" role="alert"><Icon name="info" size={16}/>{error}</div>}
+              <div className="cr-rule"/>
+              <div className="cr-actions">
+                <button type="button" className="cr-primary" disabled={disabled} onClick={submit}>
+                  <Icon name="search" size={17}/>{loading?"در حال دریافت...":"شروع بررسی"}<Icon name="arrow" size={14}/>
+                </button>
+                <span className="cr-action-note">فقط نام فیلم کافی‌ست.</span>
+              </div>
+              {loading&&<div className="cr-working" role="status"><i className="cr-spinner"/> تطبیق منابع و دریافت نظرات...</div>}
+            </div>
+          </div>
+          <aside className="cr-side" aria-label="فیلم انتخاب‌شده">
+            <div className="cr-film-window">
+              <div className="cr-film-frame">
+                {poster(selectedMovie)?<img src={poster(selectedMovie)} alt={"پوستر "+selectedMovie.title}/>:
+                  <div className="cr-frame-empty"><span className="cr-glyph">C/S</span><span className="cr-cross">+</span></div>}
+              </div>
+              <div className="cr-film-info">
+                <div className="cr-small-id">SELECTED FRAME</div>
+                <div className="cr-film-title">{selectedMovie?.title||"بدون فیلم"}</div>
+                <div className="cr-film-sub">{selectedMovie?.release_date?.slice(0,4)||"—"} / MOVIE</div>
               </div>
             </div>
-          </details>
-          {protectedSelected&&!scraperKey.trim()&&<p className="cs-field-hint" style={{color:"#e6cba7",marginTop:12}}>
-            برای دریافت نظرات منابع انتخاب‌شده کد خصوصی را از تنظیمات پیشرفته وارد کن.
-          </p>}
-          {error&&<div role="alert" className="cs-alert" data-tone="error"><Icon name="info" size={18}/>{error}</div>}
-          {providers&&!providers.tmdb?.enabled&&<div role="alert" className="cs-alert">سرویس TMDB در دسترس نیست.</div>}
+            <div className="cr-side-foot"><Icon name="shield" size={14}/> تحلیل متن روی دستگاه شما</div>
+            <div className="cr-progress-rail">01 <span data-on={true}/> 02 <span/> 03</div>
+          </aside>
+        </section>}
 
-          <div className="cs-action-row">
-            <button type="button" className="cs-button-primary" disabled={disabled} onClick={submit}>
-              <Icon name={loading?"graph":"search"} size={19}/>
-              {loading?"در حال یافتن منابع و نظرات...":"پیدا کردن و دریافت نظرات"}
-              {!loading&&<Icon name="arrow" size={16}/>}
-            </button>
-            <span className="cs-note">جست‌وجوی منابع بعد از زدن دکمه انجام می‌شود.</span>
-          </div>
-          {loading&&<div aria-live="polite">
-            <div className="cs-progress-track"><div/></div>
-            <p className="cs-field-hint" style={{marginTop:10}}>در حال تطبیق عنوان و سال فیلم و خواندن نظرات...</p>
-          </div>}
-        </div>
-        <aside id="how-it-works" className="cs-side">
-          <div className="cs-panel">
-            <h3 className="cs-side-title">سه قدم تا تصویر روشن‌تر</h3>
+        {result&&view!=="studio"&&<>
+          <nav className="cr-page-nav" aria-label="بخش‌های تحلیل">
             {[
-              ["01","فیلم را انتخاب کن","نام فیلم را جست‌وجو کن و عنوان درست را انتخاب کن."],
-              ["02","منابع را پیدا می‌کنیم","عنوان و سال ساخت بررسی می‌شود؛ لینک لازم نیست."],
-              ["03","احساسات را تحلیل کن","متن نظرات با مدل محلی رایگان بررسی می‌شود."]
-            ].map(item=><div key={item[0]} className="cs-step">
-              <span className="cs-step-num">{item[0]}</span>
-              <div><h4>{item[1]}</h4><p>{item[2]}</p></div>
+              ["studio","فیلم"],["report","گزارش"],["reviews","نظرات"]
+            ].map(([id,label])=><button key={id} type="button" className="cr-tab" data-active={view===id}
+              aria-current={view===id?"page":undefined} onClick={()=>setView(id)}>{label}
+              {id==="reviews"&&<span className="cr-tabsuffix">{totalCount}</span>}
+            </button>)}
+          </nav>
+          {result.errors.length>0&&<div className="cr-top-alerts">{result.errors.map((e,i)=>
+            <div role="status" className="cr-status" key={i}><Icon name="info" size={15}/>{LABELS[e.source]||e.source}: {e.error}</div>)}</div>}
+        </>}
+
+        {view==="report"&&result&&<>
+          <div className="cr-metric-strip">
+            {[
+              ["کل نظرات",totalCount,false],
+              ["نقد فیلم",filmCount,false],
+              ["واکنش تریلر",totalTrailer,false],
+              ["AI مثبت",aiComplete&&stats?.positivePercent!=null?stats.positivePercent+"٪":"—",true]
+            ].map(([label,value,accent])=><div className="cr-metric" key={label}>
+              <label>{label}</label><strong data-accent={accent}>{value}</strong>
             </div>)}
           </div>
-          <div className="cs-panel cs-side-glow">
-            <span className="cs-panel-kicker"><Icon name="shield" size={15}/> PRIVACY FIRST</span>
-            <div className="cs-side-big">LOCAL <span style={{color:"#b2a2f7"}}>AI</span></div>
-            <p style={{fontSize:11,color:"#aba9c2",margin:0}}>مدل روی مرورگر کاربر اجرا می‌شود؛ فقط برای دانلود اولیه به اینترنت نیاز است.</p>
-          </div>
-        </aside>
-      </section>
-
-      {result&&<div>
-        <section className="cs-section" id="report">
-          <div className="cs-section-top">
-            <div><span className="cs-panel-kicker"><Icon name="graph" size={15}/> MOVIE INTELLIGENCE</span>
-              <h2 className="cs-section-title">گزارش تحلیل فیلم</h2>
-              <p className="cs-section-caption">آمار نظرات فیلم و واکنش به تریلر جدا محاسبه می‌شوند.</p>
-            </div>
-            {selectedMovie&&<div className="cs-results-movie"><Poster movie={selectedMovie}/>
-              <div><span className="cs-results-eyebrow">FILM REPORT</span>
-              <div style={{fontSize:13,fontWeight:750}}>{selectedMovie.title}</div>
-              <div className="cs-movie-meta">{selectedMovie.release_date?.slice(0,4)}</div></div>
-            </div>}
-          </div>
-          {result.errors.map((e,i)=><div key={i} className="cs-alert" role="status" style={{margin:"0 0 12px"}}>
-            <Icon name="info" size={18}/>{LABELS[e.source]||e.source}: {e.error}
-          </div>)}
-          <div className="cs-stats">
-            {[
-              ["chat","نظرات دریافت‌شده",totalCount,"تمام منابع"],
-              ["globe","منابع بررسی‌شده",result.sources.length,"از "+sources.length+" منبع انتخاب‌شده"],
-              ["film","میانگین امتیاز TMDB",result.summary.averageRating==null?"—":result.summary.averageRating+"/10","امتیازهای نویسندگان"],
-              ["spark","نظرات مثبت AI فیلم",aiComplete&&stats?.positivePercent!=null?stats.positivePercent+"٪":"—",aiComplete?"فقط نقدهای فیلم":"هنوز تحلیل نشده"]
-            ].map(item=><article key={item[1]} className="cs-stat-card">
-              <div className="cs-stat-label"><Icon name={item[0]} size={16}/>{item[1]}</div>
-              <div className="cs-stat-value">{item[2]}</div>
-              <div className="cs-stat-foot">{item[3]}</div>
-            </article>)}
-          </div>
-        </section>
-
-        <section className="cs-section" id="insights">
-          <div className="cs-section-top">
-            <div><h2 className="cs-section-title">نبض نظرات</h2>
-              <p className="cs-section-caption">ارزیابی متن نظرات فیلم، مستقل از امتیاز ثبت‌شده نویسنده.</p></div>
-            <div style={{display:"flex",alignItems:"center",gap:9,flexWrap:"wrap"}}>
-              {aiComplete&&<span className="cs-live-chip"><span className="cs-live-dot"/> تحلیل تکمیل شد</span>}
-              <button type="button" className="cs-button-outline" disabled={aiBusy||!totalCount} onClick={startLocalAI}>
-                <Icon name="spark" size={16}/>{aiBusy?"در حال تحلیل...":aiComplete?"تحلیل دوباره AI":"شروع تحلیل احساسات AI"}
-              </button>
-              {aiBusy&&<button type="button" className="cs-button-outline" onClick={resetAnalysis}>لغو</button>}
-            </div>
-          </div>
-          {aiProgress&&<p aria-live="polite" className="cs-note">{aiProgress}</p>}
-          {aiBusy&&<div className="cs-progress-track" style={{margin:"8px 0 15px"}}><div/></div>}
-          {aiError&&<div className="cs-alert" data-tone="error" role="alert">{aiError}</div>}
-          <div className="cs-insights-grid">
-            <article className="cs-insight-panel">
-              <h3 className="cs-insight-title">توزیع احساسات فیلم</h3>
-              <p className="cs-insight-sub">فقط متن نقدهای فیلم؛ کامنت‌های تریلر جدا هستند.</p>
-              {aiComplete&&filmCount>0?<div className="cs-donut-layout">
-                <div className="cs-donut" style={{background:gradient}} role="img" aria-label={classified+" نظر از "+filmCount+" نظر فیلم تحلیل شده‌اند."}>
-                  <div className="cs-donut-core"><strong>{classified}</strong><span>نظر تحلیل‌شده</span></div>
-                </div>
-                <div className="cs-legend">
-                  {filmValues.map(item=><div className="cs-legend-item" key={item.id}>
-                    <span className="cs-legend-dot" style={{background:item.color}}/>
-                    <span>{item.name}</span><em>{item.count}</em>
+          <div className="cr-report-grid">
+            <section className="cr-ledger" aria-label="شاخص احساسات فیلم">
+              <div className="cr-ledger-top"><h3>شاخص احساسات فیلم</h3><span>SENTIMENT / FILM</span></div>
+              <div className="cr-ledger-body">
+                {aiComplete&&filmCount>0?<div className="cr-matrix">
+                  {filmValues.map(item=><div className="cr-matrix-cell" key={item.id}>
+                    <strong>{item.count}</strong>
+                    <div className="cr-matrix-track"><div className="cr-matrix-fill"
+                      style={{height:Math.max(2,pct(item.count,filmCount))+"%",background:item.color}}/></div>
+                    <small>{item.name}</small>
                   </div>)}
+                </div>:<div className="cr-muted-empty">
+                  <i>—</i><strong>هنوز تحلیل نشده</strong>
+                </div>}
+                <div className="cr-ai-action">
+                  <button type="button" className="cr-secondary" disabled={aiBusy||!totalCount} onClick={startLocalAI}>
+                    <Icon name="spark" size={16}/>{aiBusy?"در حال تحلیل":aiComplete?"تحلیل مجدد":"اجرای تحلیل AI"}
+                  </button>
+                  {aiBusy&&<button type="button" className="cr-small-action" onClick={resetAnalysis}>لغو</button>}
                 </div>
-              </div>:<div className="cs-empty-state">
-                <span className="cs-empty-orb"><Icon name="spark" size={23}/></span>
-                <strong>آماده تحلیل</strong>
-                <p>برای دیدن توزیع واقعی احساسات، تحلیل AI را اجرا کن.</p>
-              </div>}
-            </article>
-            <article className="cs-insight-panel">
-              <h3 className="cs-insight-title">سهم منابع از نظرات</h3>
-              <p className="cs-insight-sub">تعداد نظرات جمع‌آوری‌شده از هر سرویس</p>
-              <div className="cs-breakdown">
-                {result.sources.map(g=><div key={g.source}>
-                  <div className="cs-breakdown-head"><span>{LABELS[g.source]}{g.category==="trailer"?" (تریلر)":""}</span>
-                    <span dir="ltr">{g.comments.length} / {totalCount}</span></div>
-                  <div className="cs-bar"><span style={{width:pct(g.comments.length,totalCount)+"%",background:SOURCES.find(s=>s.id===g.source)?.tone||"#a996ff"}}/></div>
-                </div>)}
+                {aiProgress&&<p aria-live="polite" className="cr-report-note">{aiBusy&&<i className="cr-spinner" style={{marginLeft:8}}/>}{aiProgress}</p>}
+                {aiError&&<div role="alert" className="cr-status" data-danger="true">{aiError}</div>}
+                <p className="cr-report-note">فقط نقدهای فیلم؛ واکنش‌های تریلر جدا هستند.</p>
               </div>
-              <p className="cs-note" style={{margin:"23px 0 0"}}>تعداد واکنش‌های تریلر ({totalTrailer}) در شاخص رضایت از خود فیلم محاسبه نمی‌شود.</p>
-            </article>
+            </section>
+            <section className="cr-ledger" aria-label="سهم منابع از نظرات">
+              <div className="cr-ledger-top"><h3>منابع داده</h3><span>SOURCE / MIX</span></div>
+              <div className="cr-ledger-body">
+                <div className="cr-bars">
+                  {result.sources.map((g,index)=><div key={g.source}>
+                    <div className="cr-barlabel">
+                      <span>{SOURCES.find(x=>x.id===g.source)?.name||g.source}
+                        {g.category==="trailer"?" · تریلر":""}</span>
+                      <strong>{g.comments.length}</strong>
+                    </div>
+                    <div className="cr-barline"><span style={{width:pct(g.comments.length,totalCount)+"%",
+                      background:index===0?"#ed6748":index===1?"#adafa1":"#6e7163"}}/></div>
+                  </div>)}
+                  {!result.sources.length&&<span className="cr-muted-hint">منبعی دریافت نشد.</span>}
+                </div>
+                <p className="cr-report-note">امتیاز نویسندگان TMDB: {result.summary?.averageRating==null?"—":result.summary.averageRating+" از ۱۰"}</p>
+              </div>
+            </section>
           </div>
-        </section>
-
-        <section className="cs-section">
-          <div className="cs-section-top"><div><h2 className="cs-section-title">منابع پیدا‌شده</h2>
-            <p className="cs-section-caption">شفاف درباره فیلم، تریلر و محل دریافت هر نظر.</p></div></div>
-          <div className="cs-source-results">
-            {result.sources.map(g=><article className="cs-source-result" key={g.source}>
-              <div className="cs-result-row"><h3>{SOURCES.find(s=>s.id===g.source)?.name||g.source}</h3>
-                <span className="cs-result-badge">{g.category==="trailer"?"واکنش تریلر":"نقد فیلم"}</span></div>
-              <strong className="cs-count">{g.comments.length}</strong>
-              <p className="cs-result-meta">{g.matchedSource?.title||"نقدهای فیلم از TMDB"}
-                {g.matchedSource?.channel?" · "+g.matchedSource.channel:""}</p>
-              <div className="cs-row-between">
-                {g.matchedSource?.url?<a className="cs-matched-link" href={g.matchedSource.url}
-                  target="_blank" rel="noopener noreferrer">مشاهده منبع <Icon name="arrow" size={13}/></a>:
-                  <span className="cs-note">منبع رسمی نظرات</span>}
-                {g.matchedSource?.confidence!=null&&<span className="cs-note">تطبیق تخمینی: {Math.round(g.matchedSource.confidence*100)}٪</span>}
-              </div>
-            </article>)}
+          <div className="cr-source-ledger">
+            <div className="cr-ledger-top"><h3>منابع شناسایی‌شده</h3><span>MATCHED SOURCES</span></div>
+            {result.sources.map((g,i)=><div className="cr-source-row" key={g.source}>
+              <small>0{i+1}</small>
+              <strong>{SOURCES.find(x=>x.id===g.source)?.name||g.source}</strong>
+              <em>{g.comments.length}</em>
+              <p title={g.matchedSource?.title||""}>{g.matchedSource?.title||"نقدهای فیلم"}
+                {g.matchedSource?.confidence!=null?" · تطبیق "+Math.round(g.matchedSource.confidence*100)+"٪":""}</p>
+              {g.matchedSource?.url?<a href={g.matchedSource.url} target="_blank" rel="noopener noreferrer">بازکردن ↗</a>:<span/>}
+            </div>)}
           </div>
-        </section>
+          <div className="cr-ai-action">
+            <button type="button" className="cr-secondary" onClick={()=>setView("reviews")}>
+              دیدن نظرات <Icon name="arrow" size={13}/>
+            </button>
+          </div>
+        </>}
 
-        <section className="cs-section" id="comments">
-          <div className="cs-explorer">
-            <div className="cs-section-top"><div><h2 className="cs-section-title">مرورگر نظرات</h2>
-              <p className="cs-section-caption">متن نظرات را جست‌وجو و بر اساس منبع و احساسات فیلتر کن.</p></div>
-              <span className="cs-note">نمایش {Math.min(visible.length,pageSize)} از {visible.length} نظر</span></div>
-            <div className="cs-filter-row">
-              <div className="cs-filter-buttons" role="group" aria-label="فیلتر احساسات">
-                {[["all","همه"],...(aiComplete?[["Positive","مثبت"],["Neutral","خنثی"],["Negative","منفی"],["Unclassified","تحلیل‌نشده"]]:[])]
-                .map(item=><button type="button" className="cs-filter-button" key={item[0]}
-                  aria-pressed={activeSentiment===item[0]} data-active={activeSentiment===item[0]}
-                  onClick={()=>{setActiveSentiment(item[0]);setPageSize(8);}}>{item[1]}</button>)}
-              </div>
-              <div className="cs-filter-tools">
-                <input value={commentKeyword} onChange={e=>{setCommentKeyword(e.target.value);setPageSize(8);}}
-                  aria-label="جست‌وجو در نظرات" placeholder="جست‌وجو در نظرات..."/>
-                <select aria-label="فیلتر منبع" value={activeSource} onChange={e=>{setActiveSource(e.target.value);setPageSize(8);}}>
-                  <option value="all">همه منابع</option>
-                  {result.sources.map(g=><option key={g.source} value={g.source}>{SOURCES.find(s=>s.id===g.source)?.name||g.source}</option>)}
-                </select>
-              </div>
+        {view==="reviews"&&result&&<>
+          <div className="cr-controls">
+            <div className="cr-filters" role="group" aria-label="فیلتر نظرات">
+              {[["all","همه"],...(aiComplete?[["Positive","مثبت"],["Negative","منفی"],["Neutral","خنثی"],["Unclassified","نامشخص"]]:[])]
+              .map(([id,title])=><button type="button" className="cr-filter" key={id}
+                data-active={activeSentiment===id} aria-pressed={activeSentiment===id}
+                onClick={()=>{setActiveSentiment(id);setPageSize(8);}}>{title}</button>)}
             </div>
-            <div className="cs-comment-list">
-              {visible.slice(0,pageSize).map(item=>{
-                const key=keyFor(item.group.source,item.comment);
-                return <article className="cs-comment" key={key}>
-                  <div className="cs-comment-meta">
-                    <span className="cs-comment-source">{SOURCES.find(s=>s.id===item.group.source)?.name||item.group.source}</span>
-                    {item.comment.author&&<span className="cs-comment-author">{item.comment.author}</span>}
-                    {item.ai&&<span className="cs-sentiment-chip" data-tone={item.ai.sentiment}>{LABEL_FA[item.ai.sentiment]||"نامشخص"}</span>}
-                    {item.comment.rating!=null&&<span className="cs-comment-author">امتیاز نویسنده: {item.comment.rating} از ۱۰</span>}
-                  </div>
-                  <p className="cs-comment-text" dir="auto" data-expanded={Boolean(expanded[key])}>{item.comment.text}</p>
-                  <div className="cs-comment-footer">
-                    {String(item.comment.text).length>220&&<button type="button"
-                      onClick={()=>setExpanded(old=>({...old,[key]:!old[key]}))}>{expanded[key]?"نمایش کمتر":"خواندن کامل"}</button>}
-                    {item.comment.sourceUrl&&<a href={item.comment.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      مشاهده متن در منبع <Icon name="arrow" size={12}/></a>}
-                  </div>
-                </article>;
-              })}
-              {!visible.length&&<div className="cs-empty-state"><span className="cs-empty-orb"><Icon name="search"/></span>
-                <strong>نظری با این فیلتر پیدا نشد</strong>
-                <p>عبارت جست‌وجو یا فیلترها را تغییر بده.</p></div>}
+            <div className="cr-filters">
+              <input aria-label="جست‌وجو در نظرات" placeholder="جست‌وجو" value={commentKeyword}
+                onChange={e=>{setCommentKeyword(e.target.value);setPageSize(8);}}/>
+              <select aria-label="فیلتر منبع" value={activeSource}
+                onChange={e=>{setActiveSource(e.target.value);setPageSize(8);}}>
+                <option value="all">همه منابع</option>
+                {result.sources.map(g=><option key={g.source} value={g.source}>
+                  {SOURCES.find(x=>x.id===g.source)?.name||g.source}</option>)}
+              </select>
             </div>
-            {visible.length>pageSize&&<button type="button" className="cs-more-button"
-              onClick={()=>setPageSize(v=>v+8)}>نمایش نظرات بیشتر ({visible.length-pageSize}) <Icon name="down" size={14}/></button>}
           </div>
-        </section>
-      </div>}
-
-      <footer className="cs-footer">
-        <div><span className="cs-brand-word" style={{fontSize:16}}>Cine<span>Sense</span></span>
-          <span style={{marginRight:12}}>Designed for curious movie minds.</span></div>
-        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" lang="en">
-          This product uses the TMDB API but is not endorsed or certified by TMDB.</a>
-      </footer>
+          <section className="cr-comment-list" aria-label="نظرات فیلم">
+            {visible.slice(0,pageSize).map((item,index)=>{
+              const key=keyFor(item.group.source,item.comment);
+              return <article key={key} className="cr-comment">
+                <div className="cr-comment-index">
+                  <span>{String(index+1).padStart(3,"0")}</span>
+                  <span>{SOURCES.find(x=>x.id===item.group.source)?.name}</span>
+                </div>
+                <div className="cr-comment-body">
+                  <div className="cr-comment-meta">
+                    <strong>{item.comment.author||"کاربر"}</strong>
+                    {item.ai&&<span className="cr-emotion" data-tone={item.ai.sentiment}>{LABEL_FA[item.ai.sentiment]||"نامشخص"}</span>}
+                    {item.comment.rating!=null&&<span>امتیاز {item.comment.rating}/۱۰</span>}
+                    {item.group.category==="trailer"&&<span>تریلر</span>}
+                  </div>
+                  <p dir="auto" className="cr-comment-text" data-expanded={Boolean(expanded[key])}>{item.comment.text}</p>
+                  <div className="cr-filters">
+                    {String(item.comment.text||"").length>220&&<button type="button" className="cr-small-action"
+                      onClick={()=>setExpanded(o=>({...o,[key]:!o[key]}))}>{expanded[key]?"بستن":"ادامه"}</button>}
+                    {item.comment.sourceUrl&&<a className="cr-small-action" href={item.comment.sourceUrl}
+                      target="_blank" rel="noopener noreferrer">منبع ↗</a>}
+                  </div>
+                </div>
+              </article>;
+            })}
+            {!visible.length&&<div className="cr-muted-empty"><i>∅</i><strong>نظری پیدا نشد</strong></div>}
+          </section>
+          {visible.length>pageSize&&<button type="button" className="cr-loadmore"
+            onClick={()=>setPageSize(v=>v+8)}>نمایش بیشتر ({visible.length-pageSize})</button>}
+          <div className="cr-report-note">{Math.min(pageSize,visible.length)} / {visible.length} نظر</div>
+        </>}
+        <div style={{marginTop:40,borderTop:"1px solid #393a32",paddingTop:15,color:"#74766b",fontSize:10,
+          display:"flex",justifyContent:"space-between",flexWrap:"wrap",gap:12}}>
+          <span style={{direction:"ltr",fontFamily:"ui-monospace,monospace"}}>© CINESENSE / FRAME ROOM</span>
+          <a style={{textDecoration:"none"}} href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">
+            Uses TMDB API. Not endorsed or certified by TMDB.
+          </a>
+        </div>
+      </div>
     </div>
+    <nav className="cr-mobile-nav" aria-label="ناوبری CineSense">
+      {[["studio","search","فیلم"],["report","graph","گزارش"],["reviews","chat","نظرات"]].map(item=>
+        <button type="button" key={item[0]} data-current={view===item[0]}
+          aria-current={view===item[0]?"page":undefined} disabled={item[0]!=="studio"&&!result}
+          onClick={()=>setView(item[0])}><Icon name={item[1]} size={19}/>{item[2]}</button>)}
+    </nav>
   </main>;
 }

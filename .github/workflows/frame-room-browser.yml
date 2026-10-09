@@ -1,0 +1,98 @@
+name: CineSense Frame Room mobile and desktop UX
+on:
+  push:
+    branches: [feat/cinesense-brand-workspace-v3]
+    paths: [.github/workflows/frame-room-browser.yml]
+permissions: { contents: read }
+jobs:
+  browser-ux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install existing Playwright tests runtime
+        run: npm ci --no-audit --no-fund
+        working-directory: movie-scraper
+      - name: Build and start Next.js locally
+        working-directory: movie-scraper
+        run: |
+          npm run build
+          nohup npm run start -- -p 3100 > /tmp/cinesense-frame-room-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail -s http://127.0.0.1:3100/multi-source >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/cinesense-frame-room-server.log
+          exit 1
+      - name: Test mobile and desktop real browser interaction
+        working-directory: movie-scraper
+        run: |
+          node --input-type=module <<'NODE'
+          import {chromium} from "playwright-core";
+          const browser=await chromium.launch({channel:"chrome",headless:true,args:["--no-sandbox"]});
+          const base="http://127.0.0.1:3100";
+          try{
+            for(const width of [390,1440]){
+              const page=await browser.newPage({viewport:{width,height:844},deviceScaleFactor:1});
+              const errors=[];
+              await page.route("**/api/providers",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({tmdb:{enabled:true},youtube:{enabled:true},digimoviez:{enabled:true},
+                  persianModel:{enabled:true,model:"Aminvost/cinesense-persian-sentiment-onnx"}})}));
+              await page.route("**/api/search-movie",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({results:[{id:157336,title:"Interstellar",release_date:"2014-11-05",poster_path:null}]})}));
+              await page.route("**/api/analyze-movie",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({
+                  sources:[{source:"tmdb",category:"film",comments:[
+                    {id:"r1",source:"tmdb",text:"A wonderful film with a profound ending.",author:"A",rating:9,sentiment:"Positive"},
+                    {id:"r2",source:"tmdb",text:"Spectacular visuals and memorable soundtrack.",author:"B",rating:8,sentiment:"Positive"}
+                  ]}],
+                  errors:[],summary:{total:2,averageRating:8.5,rated:2},trailerSummary:{total:0}
+                })}));
+
+              page.on("pageerror",e=>errors.push(String(e.message).slice(0,190)));
+              const response=await page.goto(base+"/multi-source",{waitUntil:"domcontentloaded",timeout:40000});
+              console.log("PREVIEW_DIAGNOSTIC",JSON.stringify({status:response.status(),title:await page.title(),url:page.url(),text:(await page.locator("body").innerText()).slice(0,300)}));
+              if(response.status()!==200)throw Error("HTTP "+response.status());
+              await page.locator(".cr-shell .cr-title").waitFor({timeout:15000});
+              await page.getByPlaceholder("Interstellar, Oppenheimer ...").fill("Interstellar");
+              await page.locator(".MuiAutocomplete-option").first().waitFor({timeout:20000});
+              await page.locator(".MuiAutocomplete-option").first().click();
+              const fetchButton=page.getByRole("button",{name:/شروع بررسی/});
+              if(!(await fetchButton.isEnabled()))throw Error("Primary action disabled after movie selection");
+              await fetchButton.click();
+              await page.getByRole("heading",{name:"تحلیل نظرات"}).waitFor({timeout:40000});
+              if(await page.getByText("لینک HTTPS صفحه فیلم").count())throw Error("Old manual DigiMoviez URL remains");
+              const measure=await page.evaluate(()=>({
+                viewport:window.innerWidth,docWidth:document.documentElement.scrollWidth,
+                bg:getComputedStyle(document.querySelector(".cr-shell")).backgroundColor,
+                sourceTiles:document.querySelectorAll(".cr-source").length,
+                totalCards:document.querySelectorAll(".cr-metric").length,
+                listCards:document.querySelectorAll(".cr-comment").length,
+                font:getComputedStyle(document.querySelector(".cr-shell")).fontFamily,
+              }));
+              if(measure.docWidth>measure.viewport+3)
+                throw Error("Horizontal mobile overflow: "+JSON.stringify(measure));
+              if(measure.totalCards!==4)
+                throw Error("Dashboard missing expected source/stat cards: "+JSON.stringify(measure));
+              if(errors.length)throw Error("JS errors: "+JSON.stringify(errors));
+              if(await page.locator(".cr-mobile-nav").isVisible()!==(width<720))throw Error("Unexpected mobile navigation visibility.");
+              await page.evaluate(()=>document.fonts.ready);
+              if(!measure.font.includes("Estedad"))throw Error("Persian font not applied: "+measure.font);
+              await page.screenshot({path:"/tmp/cinesense-frame-room-"+width+".png",fullPage:true});
+              await page.locator(".cr-page-nav .cr-tab").filter({hasText:"نظرات"}).click();
+              await page.locator(".cr-comment").first().waitFor({timeout:5000});
+              if(await page.locator(".cr-comment").count()!==2)throw Error("Comment archive not rendering");
+              await page.screenshot({path:"/tmp/cinesense-frame-room-reviews-"+width+".png",fullPage:true});
+              console.log("FRAME_ROOM_BROWSER_PASS",JSON.stringify({width,...measure}));
+              await page.close();
+            }
+          }finally{await browser.close();}
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: cinesense-frame-room-mobile-desktop
+          path: /tmp/cinesense-frame-room-*.png
+          retention-days: 3
