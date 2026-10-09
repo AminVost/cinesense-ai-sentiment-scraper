@@ -1,8 +1,5 @@
 name: Live DigiMoviez automatic film matching
 on:
-  push:
-    branches: [feat/auto-discover-movie-sources]
-    paths: [.github/workflows/auto-discovery-live.yml]
   workflow_dispatch:
 permissions: { contents: read }
 jobs:
