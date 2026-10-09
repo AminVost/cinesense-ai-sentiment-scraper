@@ -11,7 +11,7 @@ function movieWords(text) {
   return normalizeTitle(text).split(" ").filter(Boolean);
 }
 function stripTrailerTags(title){
-  return normalizeTitle(title).replace(/\b(official|trailer|teaser|trailer\s*\d+|teaser\s*trailer|hd|4k|uhd|clip|movie|film|cinema|in\s*theaters|final|international|new|extended|theatrical|subbed|dubbed|english|release|premiere)\b/g," ")
+  return normalizeTitle(title).replace(/\b(official|trailer|teaser|trailer\s*\d+|teaser\s*trailer|hd|4k|uhd|clip|movie|film|cinema|in\s*theaters|extended|theatrical|subbed|dubbed|english|release|premiere)\b/g," ")
     .replace(/\b(19\d\d|20\d\d|2100)\b/g," ").replace(/\s+/g," ").trim();
 }
 function dice(a,b) {
