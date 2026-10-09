@@ -1,0 +1,27 @@
+name: DigiMoviez live smoke (nonblocking provider check)
+on:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths: [.github/workflows/smoke-digimoviez.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  movie-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check bounded on-demand DigiMoviez scraper
+        run: |
+          node --input-type=module <<'NODE'
+          const response=await fetch("https://cinesense.aminvost.ir/api/fetch-comments",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({url:"https://digimoviez44.top/project-y-2026/",maxComments:3}),
+            signal:AbortSignal.timeout(80000)
+          });
+          const body=await response.json().catch(()=>({error:"Invalid JSON response"}));
+          console.log("DigiMoviez HTTP",response.status);
+          if(!response.ok)throw Error("Third-party site unavailable or extractor failed: "+(body.error||"Unknown"));
+          if(!Array.isArray(body.comments)||!body.comments.length)throw Error("No comments extracted.");
+          console.log("DigiMoviez live comments:",body.comments.length,"of",body.totalComments);
+          NODE
