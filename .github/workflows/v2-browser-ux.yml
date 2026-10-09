@@ -57,8 +57,8 @@ jobs:
               if(response.status()!==200)throw Error("HTTP "+response.status());
               await page.locator(".cs-app h1").waitFor({timeout:15000});
               await page.getByPlaceholder("مثلاً Interstellar یا Inception").fill("Interstellar");
-              await page.getByRole("option").first().waitFor({timeout:20000});
-              await page.getByRole("option").first().click();
+              await page.locator(".MuiAutocomplete-option").first().waitFor({timeout:20000});
+              await page.locator(".MuiAutocomplete-option").first().click();
               const fetchButton=page.getByRole("button",{name:/پیدا کردن و دریافت نظرات/});
               if(!(await fetchButton.isEnabled()))throw Error("Primary action disabled after movie selection");
               await fetchButton.click();
