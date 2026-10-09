@@ -30,7 +30,7 @@ export function score(gold,predictions){
       return [label,{precision,recall,f1,support:rows.filter(r=>r.truth===label).length}];
     }));
     output[lang]={total:rows.length,classifiable:used.length,coverage:used.length/rows.length,
-      accuracy,macroF1:used.length?LABELS.reduce((sum,l)=>sum+details[l].f1,0)/LABELS.length:null,
+      accuracy,macroF1:used.length?(LABELS.filter(l=>details[l].support>0).reduce((sum,l)=>sum+details[l].f1,0)/LABELS.filter(l=>details[l].support>0).length):null,
       classes:details,
       meetsMinimumSample:rows.length>=100};
   }
