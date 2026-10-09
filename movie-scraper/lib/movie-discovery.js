@@ -59,7 +59,7 @@ export function rankDigiCandidate(movie,entry) {
   const candidateYears=(title.match(/\b(?:19|20)\d\d\b/g)||[]).map(Number);
   if(identity.year&&candidateYears.length&&!candidateYears.some(y=>Math.abs(y-identity.year)<=1))
     return {score:0,reason:"year_conflict"};
-  return {score:score+(identity.year&&candidateYears.includes(identity.year)?0.12:0),reason:"candidate"};
+  return {score:Math.min(1,score+(identity.year&&candidateYears.includes(identity.year)?0.12:0)),reason:"candidate"};
 }
 export function chooseMatchingCandidate(items,ranker,threshold=0.77,ambiguityGap=0.10){
   const ranked=items.map(item=>({...item,match:ranker(item)})).sort((a,b)=>b.match.score-a.match.score);
