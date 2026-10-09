@@ -28,13 +28,13 @@ jobs:
             const page=await browser.newPage();
             await page.goto("https://cinesense.aminvost.ir",{waitUntil:"domcontentloaded"});
             const result=await page.evaluate(async()=>{
-              const url="https://github.com/AminVost/cinesense-ai-sentiment-scraper/releases/download/persian-sentiment-onnx-v1/config.json";
+              const url="https://api.github.com/repos/AminVost/cinesense-ai-sentiment-scraper/releases/assets/625179491";
               try{
-                const response=await fetch(url,{mode:"cors",signal:AbortSignal.timeout(12000)});
+                const response=await fetch(url,{mode:"cors",headers:{"Accept":"application/octet-stream"},signal:AbortSignal.timeout(12000)});
                 return {ok:response.ok,status:response.status,redirected:response.redirected,url:response.url,body:(await response.text()).slice(0,130)};
               }catch(e){return {error:String(e)};}
             });
             console.log("CORS_RESULT",JSON.stringify(result));
-            if(!result.ok)throw Error("GitHub Release is not directly CORS-accessible; will need same-origin proxy or Hugging Face.");
+            if(!result.ok)throw Error("GitHub API release content is not CORS-accessible.");
           }finally{await browser.close();}
           NODE
