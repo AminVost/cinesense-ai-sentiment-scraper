@@ -9,7 +9,7 @@ const youtube = require("./providers/youtube");
 
 const app = express();
 app.use(express.json({ limit: "16kb" }));
-const origins = (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000").split(",");
+const origins = (process.env.CORS_ORIGINS || "http://localhost:3000,http://127.0.0.1:3000").split(",").map(value => value.trim()).filter(Boolean);
 app.use(cors({ origin(origin, callback) {
   if (!origin || origins.includes(origin)) return callback(null, true);
   return callback(new RequestError("Origin not allowed.", 403));
@@ -45,7 +45,10 @@ app.post("/api/fetch-comments", async (req, res) => {
     res.json(result);
   } catch (error) { replyError(res, error); }
 });
+// Bind only to loopback by default: this service is not a public proxy.
+app.use((error, _req, res, _next) => replyError(res, error));
 if (require.main === module) {
-  app.listen(Number(process.env.PORT) || 5000, () => console.log("CineSense scraper API started"));
+  app.listen(Number(process.env.PORT) || 5000, process.env.HOST || "127.0.0.1",
+    () => console.log("CineSense scraper API started"));
 }
 module.exports = app;
