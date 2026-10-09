@@ -6,9 +6,6 @@ on:
         description: 'Optional public Hugging Face model namespace/name'
         required: false
         type: string
-  push:
-    branches: [main]
-    paths: [.github/workflows/publish-persian-to-hf.yml]
 permissions:
   contents: read
   actions: read
