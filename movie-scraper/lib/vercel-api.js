@@ -43,7 +43,7 @@ export async function readInput(request) {
 }
 
 function timeoutRequest(url, options = {}) {
-  return fetch(url, { ...options, signal: AbortSignal.timeout(12000), next: { revalidate: 600 } });
+  return fetch(url, { ...options, signal: AbortSignal.timeout(12000), next: { revalidate: 600, ...options.next } });
 }
 
 async function tmdb(path, params = {}) {
@@ -100,7 +100,7 @@ export async function discoverYouTubeTrailer(movie) {
     safeSearch:"moderate"
   }))url.searchParams.set(key,value);
   let response;
-  try{response=await timeoutRequest(url.toString());}
+  try{response=await timeoutRequest(url.toString(),{next:{revalidate:21600}});}
   catch{throw new ApiError("YouTube search could not be reached.",502);}
   if(response.status===403||response.status===429)
     throw new ApiError("YouTube search quota or API permissions prevented discovery.",429);
