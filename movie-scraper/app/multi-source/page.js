@@ -154,7 +154,12 @@ export default function MultiSourcePage() {
 
     <Box component="footer" sx={{ mt: 4, pt: 2, borderTop: "1px solid #7773" }}>
       <Typography variant="caption" color="text.secondary">
-        این محصول از API سایت TMDB استفاده می‌کند، اما مورد تأیید یا گواهی TMDB نیست.
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", verticalAlign: "middle", marginLeft: 12 }}>
+          <img width="46" height="34" alt="TMDB logo" style={{ objectFit: "contain" }}
+            src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg" />
+        </a>
+        <span lang="en" dir="ltr">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+        {" "}
         {" "}<a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>
         {" — "}محتوا و حقوق نظرات متعلق به نویسندگان و منابع اصلی است.
       </Typography>
