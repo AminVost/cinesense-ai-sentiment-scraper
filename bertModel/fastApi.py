@@ -4,6 +4,10 @@ import torch
 import time
 import logging
 import psutil
+from langdetect import detect, LangDetectException, DetectorFactory
+from functools import lru_cache
+DetectorFactory.seed = 0
+
 from logging.handlers import RotatingFileHandler
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -81,6 +85,24 @@ model.to(device)
 
 logging.info(f"AI Engine is fully operational! Running on: {device.upper()}")
 
+SUPPORTED_LANGUAGES = {"en", "fr", "de", "it", "es", "nl"}
+
+@lru_cache(maxsize=1)
+def multilingual_model():
+    model_id = "nlptown/bert-base-multilingual-uncased-sentiment"
+    token = AutoTokenizer.from_pretrained(model_id)
+    classifier = AutoModelForSequenceClassification.from_pretrained(model_id).to(device)
+    classifier.eval()
+    return token, classifier
+
+def detect_language(text):
+    if sum("\u0600" <= c <= "\u06ff" for c in text) > max(1, sum(c.isalpha() for c in text) * 0.35):
+        return "fa"
+    try:
+        return detect(text)
+    except LangDetectException:
+        return "unknown"
+
 class CommentRequest(BaseModel):
     comments: list[dict] 
 
@@ -98,28 +120,50 @@ async def analyze_comments(request: CommentRequest):
 
     start_total_time = time.time()
 
-    batch_texts = [comment["text"] for comment in comments]
+    results = [None] * len(comments)
+    groups = {"fa": [], "multilingual": []}
+    for index, comment in enumerate(comments):
+        language = detect_language(comment["text"])
+        if language == "fa":
+            groups["fa"].append((index, comment, language))
+        elif language in SUPPORTED_LANGUAGES:
+            groups["multilingual"].append((index, comment, language))
+        else:
+            results[index] = {"id": comment["id"], "text": comment["text"],
+                              "language": language, "sentiment": "Unclassified",
+                              "positive": None, "negative": None, "neutral": None, "model": None}
 
-    tokens = tokenizer(batch_texts, return_tensors="pt", padding=True, truncation=True, max_length=512).to(device)
-
-    with torch.no_grad():
-        outputs = model(**tokens)
-
-    probabilities = torch.nn.functional.softmax(outputs.logits, dim=-1)
-
-    results = []
-    for i, comment in enumerate(comments):
-        negative_prob = probabilities[i][0].item() * 100
-        positive_prob = probabilities[i][1].item() * 100
-        sentiment = "Positive" if positive_prob > negative_prob else "Negative"
-
-        results.append({
-            "id": comment["id"],
-            "text": comment["text"],
-            "sentiment": sentiment,
-            "positive": f"{positive_prob:.2f}%",
-            "negative": f"{negative_prob:.2f}%"
-        })
+    for group_name, items in groups.items():
+        if not items:
+            continue
+        if group_name == "fa":
+            active_tokenizer, active_model = tokenizer, model
+        else:
+            try:
+                active_tokenizer, active_model = multilingual_model()
+            except Exception as error:
+                logging.error("Multilingual model unavailable: %s", error)
+                raise HTTPException(status_code=503, detail="Multilingual model unavailable")
+        for offset in range(0, len(items), 8):
+            batch = items[offset:offset + 8]
+            tokens = active_tokenizer([item[1]["text"] for item in batch],
+                                     return_tensors="pt", padding=True,
+                                     truncation=True, max_length=512).to(device)
+            with torch.inference_mode():
+                probabilities = torch.softmax(active_model(**tokens).logits, dim=-1).cpu().tolist()
+            for (index, comment, language), probs in zip(batch, probabilities):
+                if group_name == "fa":
+                    negative_prob, positive_prob, neutral_prob = probs[0], probs[1], 0.0
+                else:
+                    negative_prob, neutral_prob, positive_prob = sum(probs[:2]), probs[2], sum(probs[3:])
+                label = max({"Positive": positive_prob, "Negative": negative_prob, "Neutral": neutral_prob},
+                            key={"Positive": positive_prob, "Negative": negative_prob, "Neutral": neutral_prob}.get)
+                results[index] = {
+                    "id": comment["id"], "text": comment["text"], "language": language,
+                    "sentiment": label, "positive": f"{positive_prob*100:.2f}%",
+                    "negative": f"{negative_prob*100:.2f}%", "neutral": f"{neutral_prob*100:.2f}%",
+                    "model": "persian-bert" if group_name == "fa" else "multilingual-five-star-bert"
+                }
 
     total_processing_time = time.time() - start_total_time
     end_ram = get_ram_usage()
