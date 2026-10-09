@@ -16,9 +16,16 @@ async function tmdbGet(path, params = {}) {
     });
     return response.data;
   } catch (error) {
-    if (error.response?.status === 429) throw new RequestError("TMDB rate limit reached.", 429);
-    if ([401, 403].includes(error.response?.status)) throw new RequestError("TMDB credentials rejected.", 502);
-    throw new RequestError("TMDB request failed.", 502);
+    // Never log Axios' full error/config object: it can contain TMDB credentials.
+    const status = error.response?.status;
+    const rawCode = error.code || error.cause?.code || "UNKNOWN";
+    const code = /^[A-Z_0-9]+$/.test(rawCode) ? rawCode : "UNKNOWN";
+    console.error("[TMDB] request error", { path, status: status || "no_http_response", code });
+    if (status === 429) throw new RequestError("TMDB rate limit reached.", 429);
+    if (status === 401 || status === 403) throw new RequestError("TMDB credentials rejected.", 502);
+    if (status === 404) throw new RequestError("Movie was not found in TMDB.", 404);
+    if (!status) throw new RequestError("TMDB network connection failed (" + code + "). Check VPN/proxy/DNS from the Node.js process.", 502);
+    throw new RequestError("TMDB request failed (HTTP " + status + ").", 502);
   }
 }
 
