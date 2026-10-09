@@ -1,7 +1,7 @@
 name: Persian ONNX end-to-end browser smoke
 on:
   push:
-    branches: [feat/free-multi-source-reviews]
+    branches: [main]
     paths: [.github/workflows/persian-browser-smoke.yml]
   workflow_dispatch:
 permissions:
@@ -9,7 +9,7 @@ permissions:
 jobs:
   persian-inference:
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,7 +18,7 @@ jobs:
       - name: Install browser test dependencies
         working-directory: movie-scraper
         run: npm ci --no-audit --no-fund
-      - name: Run real Persian sentiment with local ONNX browser model
+      - name: Run real Persian sentiment with public Hugging Face ONNX browser model
         working-directory: movie-scraper
         run: |
           node --input-type=module <<'NODE'
@@ -29,22 +29,25 @@ jobs:
             page.on("console",m=>{if(m.type()==="error")console.log("CHROME ERROR:",m.text().slice(0,250));});
             await page.goto("https://cinesense.aminvost.ir",{waitUntil:"domcontentloaded",timeout:30000});
             const result=await page.evaluate(async()=>{
+              const settings=await fetch("/api/providers").then(r=>r.json());
+              const modelId=settings.persianModel?.model;
+              if(!settings.persianModel?.enabled||!modelId) throw Error("Persian model not configured in production");
               const worker=new Worker("/sentiment.worker.js",{type:"module"});
               return new Promise((resolve,reject)=>{
-                const timer=setTimeout(()=>{worker.terminate();reject(Error("Persian model inference timeout"))},240000);
+                const timer=setTimeout(()=>{worker.terminate();reject(Error("Persian model inference timeout"))},320000);
                 worker.onmessage=e=>{
                   if(e.data.type==="complete"){clearTimeout(timer);worker.terminate();resolve(e.data);}
                   if(e.data.type==="error"){clearTimeout(timer);worker.terminate();reject(Error(e.data.message));}
                 };
                 worker.onerror=e=>{clearTimeout(timer);worker.terminate();reject(Error(e.message||"Worker error"));};
-                worker.postMessage({id:2,persianModelId:"cinesense-persian-sentiment",comments:[
+                worker.postMessage({id:2,persianModelId:modelId,comments:[
                   {key:"fa:positive",text:"این فیلم فوق العاده بود و از تماشایش خیلی لذت بردم."},
                   {key:"fa:negative",text:"فیلم خیلی ضعیف و خسته کننده بود و اصلا دوست نداشتم."}
                 ]});
               });
             });
             console.log("PERSIAN RESULTS",JSON.stringify(result.results));
-            if(result.results?.length!==2||result.results.some(x=>x.model!=="cinesense-persian-sentiment"))
+            if(result.results?.length!==2||result.results.some(x=>x.model!=="Aminvost/cinesense-persian-sentiment-onnx"))
               throw Error("Persian ONNX pipeline did not load properly.");
             console.log("PASS: Persian model ran on Chromium with two Persian sentences.");
           }finally{await browser.close();}
