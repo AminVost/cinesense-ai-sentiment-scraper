@@ -6,7 +6,7 @@ export default function MultiSourcePage() {
   const [sources, setSources] = useState(["tmdb"]), [digimoviezUrl, setDigimoviezUrl] = useState(""), [youtubeVideoId, setYoutubeVideoId] = useState("");
   const [maxComments, setMaxComments] = useState(20), [providers, setProviders] = useState(null), [result, setResult] = useState(null), [error, setError] = useState(""), [loading, setLoading] = useState(false);
   useEffect(() => {
-    fetch("/api/providers").then(r => r.json()).then(setProviders).catch(() => setError("اتصال به سرور برقرار نیست."));
+    fetch("/api/providers").then(r => r.json()).then(data => { setProviders(data); setSources(data.tmdb?.enabled ? ["tmdb"] : ["digimoviez"]); }).catch(() => setError("اتصال به سرور برقرار نیست."));
   }, []);
   useEffect(() => {
     if (query.trim().length < 2 || !providers?.tmdb?.enabled) { setMovies([]); return; }
