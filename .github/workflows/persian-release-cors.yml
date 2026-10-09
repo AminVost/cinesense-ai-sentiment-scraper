@@ -1,0 +1,40 @@
+name: Persian release browser cross-origin test
+on:
+  push:
+    branches: [feat/free-multi-source-reviews]
+    paths: [.github/workflows/persian-release-cors.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser utilities
+        working-directory: movie-scraper
+        run: npm ci --no-audit --no-fund
+      - name: Test GH Release asset accessibility from production website
+        working-directory: movie-scraper
+        run: |
+          node --input-type=module <<'NODE'
+          import { chromium } from "playwright-core";
+          const browser=await chromium.launch({channel:"chrome",headless:true,args:["--no-sandbox"]});
+          try{
+            const page=await browser.newPage();
+            await page.goto("https://cinesense.aminvost.ir",{waitUntil:"domcontentloaded"});
+            const result=await page.evaluate(async()=>{
+              const url="https://github.com/AminVost/cinesense-ai-sentiment-scraper/releases/download/persian-sentiment-onnx-v1/config.json";
+              try{
+                const response=await fetch(url,{mode:"cors",signal:AbortSignal.timeout(12000)});
+                return {ok:response.ok,status:response.status,redirected:response.redirected,url:response.url,body:(await response.text()).slice(0,130)};
+              }catch(e){return {error:String(e)};}
+            });
+            console.log("CORS_RESULT",JSON.stringify(result));
+            if(!result.ok)throw Error("GitHub Release is not directly CORS-accessible; will need same-origin proxy or Hugging Face.");
+          }finally{await browser.close();}
+          NODE
