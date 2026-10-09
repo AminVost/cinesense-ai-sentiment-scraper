@@ -1,33 +1,46 @@
-# CineSense — Free Multi-Source Movie Review Analysis
+# CineSense — Multi-Source Movie Reviews
 
-CineSense gathers film opinions from permitted sources and analyzes sentiment with locally hosted AI. Free API keys, quotas, platform terms and your own compute resources still apply.
+CineSense is a self-hosted prototype that collects permitted film reviews and classifies their sentiment. No paid AI subscription or paid API is required. You still need free API credentials, an internet connection for first-time model downloads, and your own CPU/RAM.
 
 ## Providers
 
-- TMDB: official API for movie search and reviews. Configure a free TMDB v4 Read Access Token or API key (non-commercial API terms and attribution apply).
-- DigiMoviez: optional pre-existing Playwright scraper restricted to allowlisted HTTPS domains, subject to permission and changes to page structure.
-- YouTube: optional YouTube Data API for top-level trailer comments. Needs an API key and free quota. Trailer reactions are never mixed into film review satisfaction.
+| Provider | Data | Configuration | Notes |
+| --- | --- | --- | --- |
+| TMDB | Written movie reviews and search | Free `TMDB_READ_ACCESS_TOKEN` or `TMDB_API_KEY` | API is primarily for non-commercial use, with required attribution. |
+| DigiMoviez | Comments for an individual movie URL | `DIGIMOVIEZ_ALLOWED_HOSTS` | Playwright; only enable sites you have permission to scrape. |
+| YouTube | Trailer comments | Optional free `YOUTUBE_API_KEY` | A video ID must be entered manually; trailer reactions are not added to film satisfaction. |
 
-## Local start
+*Note:* "free" is not synonymous with unlimited or commercially licensed. YouTube API has quota and separate data restrictions; TMDB's usage/attribution terms apply.
 
-1. In bertModel: pip install -r requirements.txt and uvicorn fastApi:app --host 127.0.0.1 --port 8000
-2. In express-scraper: copy .env.example to .env, configure TMDB credential, npm ci, npx playwright install chromium, npm start
-3. In movie-scraper: npm ci, npm run dev
-4. Open http://localhost:3000 (legacy UI remains at /direct-url).
+## Start locally
+
+Requirements: Node.js 22, Python 3.10+, Chromium for Playwright, available RAM for local BERT models.
+
+1. `cd bertModel`, create a Python virtual environment, then run `pip install -r requirements.txt` and `uvicorn fastApi:app --host 127.0.0.1 --port 8000`.
+2. In `express-scraper`, copy `.env.example` to `.env` and put in a **free** TMDB token/key. Set `YOUTUBE_API_KEY` only if desired. Run `npm ci`, `npx playwright install chromium`, then `npm start`.
+3. In `movie-scraper`, run `npm ci` and `npm run dev`.
+4. Open `http://localhost:3000`. The original single-URL interface remains at `/direct-url`.
+
+**AI model behavior:** The inference service starts without prompting for input or downloading models. It downloads a model from Hugging Face on the first matching request if it is not already cached. A disconnected machine must pre-download required models. Persian: `HooshvareLab/bert-fa-base-uncased-sentiment-deepsentipers-binary`, unless a `fine_tuned_model` folder exists. English, French, German, Spanish, Italian and Dutch: `nlptown/bert-base-multilingual-uncased-sentiment`. Other languages return `Unclassified` (not falsely `Negative`). Model outputs are estimates, not verified satisfaction or calibrated probabilities.
 
 ## API
 
-GET /api/providers
-POST /api/search-movie — JSON body: {"query":"Interstellar"}
-POST /api/analyze-movie — JSON body: {"tmdbId":157336,"sources":["tmdb"],"maxComments":20}
-Optional source-specific fields: digimoviezUrl (digimoviez), youtubeVideoId (youtube).
-POST /api/fetch-comments — legacy extractor, now restricted by the configured HTTPS host allowlist.
+- `GET /api/providers`: currently configured providers
+- `POST /api/search-movie`: `{"query":"Interstellar"}`
+- `POST /api/analyze-movie`: `{"tmdbId":157336,"sources":["tmdb"],"maxComments":20}`
+- Add `digimoviezUrl` for `digimoviez` or `youtubeVideoId` for `youtube`. The latter is an **11-character ID**, not a full URL.
+- `POST /api/fetch-comments`: compatible legacy endpoint, restricted to enabled HTTPS movie hosts
 
-The response separates source summaries, movie satisfaction, trailer reaction statistics and per-source errors.
+Returned `sources[]` each have their own data, `summary` covers film reviews only, `trailerSummary` covers YouTube only, and `errors[]` indicates partial failures.
 
-## Important limitations
+## Automated checks
 
-Do not publish the scraper as a public open proxy. URL redirects, rate limiting, authentication, quotas and provider licenses still require production hardening.
-The original AI model is a Persian binary classifier, not a validated multilingual review model. International reviews require a multilingual classifier before percentage outputs can be trusted. Self-labelled fine-tuning data are not a reliable accuracy benchmark.
+GitHub Actions runs dependency-free validation tests, JavaScript/Python syntax checks, Node package installation, mocked API integration tests, and a Next.js production build. A green workflow does **not** imply real API credentials, successful live scraping, or validated sentiment accuracy. These still need end-to-end tests.
 
-Repository code license: MIT. Third-party content follows each provider's terms.
+## Security and limitations
+
+Express listens on `127.0.0.1` by default. The existing scraper blocks off-allowlist network requests, navigation redirects, WebSockets, and service workers, and limits concurrent browsers/pagination. Keep it behind a trusted gateway if deployed. Public deployment still requires user authentication, abuse/rate limiting, compliance with source terms, and real-world reliability testing. Some websites need scripts from external hosts, which are intentionally blocked until explicitly and safely supported.
+
+The training examples in `bertModel/fine_tuned_data.json` contain duplicates and self-generated labels, not a valid accuracy dataset. Create a human-reviewed evaluation dataset before claiming model accuracy.
+
+Repository source code is MIT licensed; this **does not** license third-party review content.
