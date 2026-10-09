@@ -51,7 +51,7 @@ function fromStars(predictions) {
 
 self.addEventListener("message", async event => {
   const { id, comments } = event.data||{};
-  if (!Number.isSafeInteger(id) || !Array.isArray(comments) || comments.length>60) return;
+  if (!Number.isSafeInteger(id) || !Array.isArray(comments) || comments.length>90) return;
   const input=comments.map(item=>({key:String(item.key||""),text:String(item.text||"").trim()})).filter(x=>x.text&&x.key);
   try {
     const eligible=input.filter(item=>language(item.text)==="latin-unverified");
