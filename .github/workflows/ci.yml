@@ -54,6 +54,9 @@ jobs:
       - name: Install frontend dependencies
         working-directory: movie-scraper
         run: npm ci --no-audit --no-fund --fetch-retries=1 --fetch-timeout=30000
+      - name: Test Vercel serverless providers
+        working-directory: movie-scraper
+        run: node --test test/vercel-api.test.mjs
       - name: Build Next.js
         working-directory: movie-scraper
         env:
