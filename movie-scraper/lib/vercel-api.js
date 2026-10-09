@@ -1,10 +1,12 @@
 /**
  * Server-only free-provider API.
- * This deployment deliberately does not run the heavyweight Python BERT model or Playwright.
+ * Source discovery uses free official API + bounded serverless scraper.
  * TMDB labels below describe AUTHOR RATINGS, never inferred AI sentiment.
  */
 const TMDB_BASE = "https://api.themoviedb.org/3";
+import { movieIdentity, rankYouTubeCandidate, chooseMatchingCandidate } from "./movie-discovery.js";
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3/commentThreads";
+const YOUTUBE_SEARCH = "https://www.googleapis.com/youtube/v3/search";
 
 export class ApiError extends Error {
   constructor(message, status = 400) {
@@ -17,8 +19,8 @@ export function available() {
   return {
     tmdb: { enabled: Boolean(process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_KEY), type: "film", metric: "author_rating" },
     persianModel: { enabled: Boolean(process.env.PERSIAN_BROWSER_MODEL_ID), model: process.env.PERSIAN_BROWSER_MODEL_ID || null, type: "browser_ai", note: "Requires a verified public Transformers.js-compatible Persian ONNX repository." },
-    youtube: { enabled: Boolean(process.env.YOUTUBE_API_KEY), type: "trailer", metric: "unclassified" },
-    digimoviez: { enabled: Boolean(process.env.CINESENSE_SCRAPER_ACCESS_CODE?.length >= 24), type: "film", requiresUrl: true, requiresAccessCode: true, experimental: true, metric: "browser_ai_optional" },
+    youtube: { enabled: Boolean(process.env.YOUTUBE_API_KEY), type: "trailer", autoDiscover: true, metric: "unclassified" },
+    digimoviez: { enabled: Boolean(process.env.CINESENSE_SCRAPER_ACCESS_CODE?.length >= 24), type: "film", autoDiscover: true, requiresUrl: false, requiresAccessCode: true, experimental: true, metric: "browser_ai_optional" },
   };
 }
 
@@ -75,6 +77,48 @@ export async function searchMovies(query) {
     id: m.id, title: m.title, original_title: m.original_title,
     release_date: m.release_date || "", poster_path: m.poster_path || null,
   }));
+}
+
+export async function getSelectedMovie(tmdbId) {
+  if (!Number.isSafeInteger(Number(tmdbId)) || Number(tmdbId) < 1 || Number(tmdbId) > 1000000000)
+    throw new ApiError("Choose a valid movie from search results.");
+  const data = await tmdb("/movie/" + Number(tmdbId), { language: "en-US" });
+  try { return movieIdentity(data); } catch { throw new ApiError("Movie metadata could not be verified.", 502); }
+}
+
+/**
+ * Exactly one search request per selected movie; never run discovery per keystroke.
+ * API key stays server-side. Fail closed rather than commenting on a random video.
+ */
+export async function discoverYouTubeTrailer(movie) {
+  const apiKey=process.env.YOUTUBE_API_KEY?.trim();
+  if(!apiKey) throw new ApiError("YouTube API is not configured.",503);
+  const query=[movie.title, movie.year, "official trailer"].filter(Boolean).join(" ").slice(0,150);
+  const url=new URL(YOUTUBE_SEARCH);
+  for(const [key,value] of Object.entries({
+    key:apiKey, part:"snippet", q:query, type:"video", order:"relevance", maxResults:"15",
+    safeSearch:"moderate"
+  }))url.searchParams.set(key,value);
+  let response;
+  try{response=await timeoutRequest(url.toString());}
+  catch{throw new ApiError("YouTube search could not be reached.",502);}
+  if(response.status===403||response.status===429)
+    throw new ApiError("YouTube search quota or API permissions prevented discovery.",429);
+  if(!response.ok)throw new ApiError("YouTube search returned HTTP "+response.status,502);
+  const data=await response.json();
+  const entries=(data.items||[]).filter(item=>/^[a-zA-Z0-9_-]{11}$/.test(item.id?.videoId||""))
+    .map(item=>({
+      id:item.id.videoId,title:String(item.snippet?.title||"").slice(0,200),
+      channel:String(item.snippet?.channelTitle||"").slice(0,150),
+      publishedAt:item.snippet?.publishedAt||""
+    }));
+  const choice=chooseMatchingCandidate(entries,item=>rankYouTubeCandidate(movie,item),0.76,0);
+  if(!choice.match)
+    throw new ApiError("No reliable official YouTube trailer matched this movie and year.",404);
+  const selected=choice.match;
+  return {videoId:selected.id,title:selected.title,channel:selected.channel,
+    confidence:Number(selected.match.score.toFixed(2)),
+    url:"https://www.youtube.com/watch?v="+selected.id};
 }
 
 export function summary(comments, method = "none") {
@@ -173,17 +217,20 @@ export async function analyzeMovie(data) {
   const max = data.maxComments === undefined ? 20 : data.maxComments;
   if (!Number.isInteger(max) || max < 1 || max > 30) throw new ApiError("Select 1–30 reviews per source.");
   if (unique.includes("tmdb") && (!Number.isSafeInteger(Number(data.tmdbId)) || Number(data.tmdbId) < 1)) throw new ApiError("Choose a movie first.");
-  if (unique.includes("youtube") && (typeof data.youtubeVideoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(data.youtubeVideoId))) throw new ApiError("Enter a valid YouTube trailer ID.");
+  if (unique.includes("youtube") && (!Number.isSafeInteger(Number(data.tmdbId)) || Number(data.tmdbId) < 1)) throw new ApiError("Choose a movie for automatic trailer discovery.");
 
   const result = await Promise.allSettled(unique.map(async source => {
-    const { reviews, hasMore } = source === "tmdb"
-      ? await tmdbReviews(Number(data.tmdbId), max)
-      : await youtubeComments(data.youtubeVideoId, max);
-    return {
-      source, hasMore, comments: reviews,
-      category: source === "tmdb" ? "film" : "trailer",
-      summary: summary(reviews, source === "tmdb" ? "author_rating" : "none"),
-    };
+    if(source==="tmdb"){
+      const {reviews,hasMore}=await tmdbReviews(Number(data.tmdbId),max);
+      return {source,hasMore,comments:reviews,category:"film",
+        summary:summary(reviews,"author_rating")};
+    }
+    const movie=await getSelectedMovie(data.tmdbId);
+    const matched=await discoverYouTubeTrailer(movie);
+    const {reviews,hasMore}=await youtubeComments(matched.videoId,max);
+    return {source,hasMore,comments:reviews,category:"trailer",
+      matchedSource:matched,
+      summary:summary(reviews,"none")};
   }));
   const successes = [], errors = [];
   result.forEach((entry, index) => {
@@ -196,6 +243,6 @@ export async function analyzeMovie(data) {
     sources: successes, errors,
     summary: summary(films, "author_rating"),
     trailerSummary: summary(trailers),
-    note: "Serverless edition: source author ratings only; AI sentiment is unavailable. Trailer comments are never counted as movie ratings.",
+    note: "Source reviews and trailer comments are separate. Browser AI inference runs on user request; trailer feedback is not film audience satisfaction.",
   };
 }
