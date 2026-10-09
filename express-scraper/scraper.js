@@ -7,10 +7,14 @@ let browserPromise = null;
 let activeScrapes = 0;
 const queue = [];
 const MAX_CONCURRENT_SCRAPES = 2;
+const MAX_PENDING_SCRAPES = 20;
 const MAX_PAGES = 25;
 
 async function acquireSlot() {
   if (activeScrapes >= MAX_CONCURRENT_SCRAPES) {
+    if (queue.length >= MAX_PENDING_SCRAPES) {
+      throw new Error("Scraper is busy. Try again shortly.");
+    }
     await new Promise(resolve => queue.push(resolve));
   }
   activeScrapes++;
@@ -46,13 +50,9 @@ async function fetchComments(rawUrl, maxComments = 20) {
       serviceWorkers: "block",
       acceptDownloads: false,
     });
-    const page = await context.newPage();
-    page.setDefaultTimeout(15000);
-
-    // Only allow explicitly configured scraper hosts for ALL browser requests.
-    // This also blocks redirect-based SSRF, subresource requests to internal IPs,
-    // and remote scripts hosted outside the allowlist.
-    await page.route("**/*", route => {
+    // Register context-wide policies before creating any pages. This also
+    // covers popups rather than just the original movie tab.
+    await context.route("**/*", route => {
       try {
         validateMovieUrl(route.request().url());
       } catch (_error) {
@@ -63,6 +63,10 @@ async function fetchComments(rawUrl, maxComments = 20) {
       }
       return route.continue();
     });
+    // WebSockets are not covered by normal request routing.
+    await context.routeWebSocket("**/*", socket => socket.close());
+    const page = await context.newPage();
+    page.setDefaultTimeout(15000);
 
     logger.info("Opening movie page: " + url);
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
