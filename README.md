@@ -41,6 +41,6 @@ GitHub Actions runs dependency-free validation tests, JavaScript/Python syntax c
 
 Express listens on `127.0.0.1` by default. The existing scraper blocks off-allowlist network requests, navigation redirects, WebSockets, and service workers, and limits concurrent browsers/pagination. Keep it behind a trusted gateway if deployed. Public deployment still requires user authentication, abuse/rate limiting, compliance with source terms, and real-world reliability testing. Some websites need scripts from external hosts, which are intentionally blocked until explicitly and safely supported.
 
-The training examples in `bertModel/fine_tuned_data.json` contain duplicates and self-generated labels, not a valid accuracy dataset. Create a human-reviewed evaluation dataset before claiming model accuracy.
+The historical file `bertModel/fine_tuned_data.json` has duplicated pseudo-labels; it is **not used** for training. The repaired `hooshFineTune.py` now requires a manually reviewed JSONL file, at least 50 unique labeled texts with both classes represented, and a held-out split. To train (optional), install `bertModel/requirements-training.txt` and run `python hooshFineTune.py --data labeled_comments.jsonl`. Each line must be a JSON object such as `{"text":"فیلم خوبی بود","label":1}` (1 positive, 0 negative). A much larger annotated dataset is recommended for meaningful accuracy.
 
 Repository source code is MIT licensed; this **does not** license third-party review content.
