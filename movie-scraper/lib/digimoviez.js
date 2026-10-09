@@ -80,7 +80,7 @@ export async function scrapeDigiMoviez(urlValue,maxComments=10){
   }catch(error){
     if(error instanceof ApiError)throw error;
     // Never expose paths or secret headers.
-    console.error("[DigiMoviez]",error?.name||"Scraper error");
+    console.error("[DigiMoviez]", error?.name || "Error", String(error?.message||"").replace(/\/[a-z0-9/_-]{60,}/gi,"[path]").slice(0,450));
     throw new ApiError("DigiMoviez could not be reached or parsed from this server.",502);
   }finally{
     if(context)await context.close().catch(()=>{});
