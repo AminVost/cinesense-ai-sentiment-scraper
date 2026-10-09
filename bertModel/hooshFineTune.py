@@ -15,15 +15,6 @@ import os
 import random
 from pathlib import Path
 
-from datasets import Dataset
-from transformers import (
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    DataCollatorWithPadding,
-    Trainer,
-    TrainingArguments,
-)
-
 BASE_MODEL = "HooshvareLab/bert-fa-base-uncased-sentiment-deepsentipers-binary"
 
 
@@ -102,6 +93,14 @@ def main():
     args = parser.parse_args()
 
     records = read_gold_data(args.data)
+    from datasets import Dataset
+    from transformers import (
+        AutoModelForSequenceClassification,
+        AutoTokenizer,
+        DataCollatorWithPadding,
+        Trainer,
+        TrainingArguments,
+    )
     train_rows, validation_rows = stratified_split(records)
     print(f"Training on {len(train_rows)} records, evaluating on {len(validation_rows)} held-out records")
     tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL)
