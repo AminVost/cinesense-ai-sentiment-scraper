@@ -9,8 +9,8 @@ const LABELS = { tmdb: "TMDB", youtube: "YouTube (تریلر)", digimoviez: "Dig
 const LABEL_FA = {Positive:"مثبت",Negative:"منفی",Neutral:"خنثی",Unclassified:"نامشخص"};
 const keyFor = (source, comment) => source + ":" + comment.id;
 
-async function postJson(path,body){
-  const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+async function postJson(path,body,scraperCode){
+  const response=await fetch(path,{method:"POST",headers:{"Content-Type":"application/json",...(scraperCode?{"x-cinesense-scraper-key":scraperCode}:{})},body:JSON.stringify(body)});
   const data=await response.json();
   if(!response.ok)throw Error(data.error||"خطا در ارتباط با سرور");
   return data;
@@ -34,6 +34,7 @@ export default function MultiSourcePage(){
   const [sources,setSources]=useState(["tmdb"]);
   const [youtubeVideoId,setYoutubeVideoId]=useState("");
   const [digimoviezUrl,setDigimoviezUrl]=useState("");
+  const [scraperKey,setScraperKey]=useState("");
   const [maxComments,setMaxComments]=useState(10);
   const [providers,setProviders]=useState(null);
   const [result,setResult]=useState(null);
@@ -90,7 +91,7 @@ export default function MultiSourcePage(){
       if(sources.includes("digimoviez")){
         requests.push(postJson("/api/fetch-comments",{
           url:digimoviezUrl,maxComments:Math.min(10,Number(maxComments))
-        }).then(data=>({type:"digimoviez",data})));
+        },scraperKey).then(data=>({type:"digimoviez",data})));
       }
       const settled=await Promise.allSettled(requests);
       const groups=[],errors=[];
@@ -161,7 +162,7 @@ export default function MultiSourcePage(){
   const disabled=loading||!sources.length||sources.some(s=>!providers?.[s]?.enabled)
     ||(sources.includes("tmdb")&&!selectedMovie)
     ||(sources.includes("youtube")&&!/^[A-Za-z0-9_-]{11}$/.test(youtubeVideoId))
-    ||(sources.includes("digimoviez")&&!/^https:\/\//.test(digimoviezUrl))
+    ||(sources.includes("digimoviez")&&(!/^https:\/\//.test(digimoviezUrl)||!scraperKey.trim()))
     ||Number(maxComments)<1||Number(maxComments)>30;
   const filmCount=result?.sources.filter(g=>g.category==="film").reduce((n,g)=>n+g.comments.length,0)||0;
   return <Container maxWidth="md" sx={{py:5,direction:"rtl"}}>
@@ -193,6 +194,9 @@ export default function MultiSourcePage(){
     {sources.includes("digimoviez")&&<TextField fullWidth margin="normal"
       label="لینک HTTPS صفحه فیلم در DigiMoviez"
       value={digimoviezUrl} onChange={e=>setDigimoviezUrl(e.target.value)}/>}
+    {sources.includes("digimoviez")&&<TextField fullWidth margin="normal" type="password" autoComplete="off"
+      label="کد دسترسی خصوصی استخراج DigiMoviez" value={scraperKey}
+      onChange={e=>setScraperKey(e.target.value)} helperText="برای محافظت از سهمیه رایگان سرور؛ فقط نزد مالک پروژه است." />}
     {sources.includes("youtube")&&<TextField fullWidth margin="normal"
       label="شناسه ۱۱ کاراکتری تریلر YouTube"
       value={youtubeVideoId} onChange={e=>setYoutubeVideoId(e.target.value)}/>}
