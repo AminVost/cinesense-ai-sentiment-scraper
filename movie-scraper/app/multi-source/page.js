@@ -87,8 +87,9 @@ export default function MultiSourcePage(){
     return ()=>workerRef.current?.terminate();
   },[]);
   useEffect(()=>{
-    if(query.trim().length<2||!providers?.tmdb?.enabled){setMovies([]);return;}
+    if(query.trim().length<2||!providers?.tmdb?.enabled){setMovies([]);setSearchBusy(false);return;}
     const controller=new AbortController();
+    setSearchBusy(true);
     const timer=setTimeout(async()=>{
       try{
         const response=await fetch("/api/search-movie",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -97,6 +98,7 @@ export default function MultiSourcePage(){
         if(!response.ok)throw Error(data.error||"جست‌وجوی فیلم ناموفق بود.");
         setMovies(data.results||[]);
       }catch(e){if(e.name!=="AbortError")setError(e.message);}
+      finally{if(!controller.signal.aborted)setSearchBusy(false);}
     },450);
     return ()=>{clearTimeout(timer);controller.abort();};
   },[query,providers]);
