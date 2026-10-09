@@ -1,8 +1,8 @@
 import "./globals.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+import "@fontsource-variable/estedad/wght.css";
 
 export const metadata = {
-  title: "CineSense | تحلیل هوشمند نظرات فیلم",
+  title: "CineSense — Frame Room | اتاق تحلیل فیلم",
   description: "تحلیل احساسات کاربران درباره فیلم‌ها از منابع مختلف با هوش مصنوعی محلی.",
   applicationName: "CineSense",
   robots: { index: false, follow: false },
