@@ -58,4 +58,14 @@ Repository source code is MIT licensed; this **does not** license third-party re
 - **Browser AI:** A real headless Chrome instance loaded `Xenova/bert-base-multilingual-uncased-sentiment`, classified an English positive sentence and returned an estimated Positive probability of about **0.981**.
 - **Language limitation:** Only Latin-script input was attempted for the browser model and detection is not independently validated; Persian remains Unclassified in the Vercel/browser edition. The local Python service still includes the separate Persian ParsBERT model. A properly converted and validated Persian ONNX model is a future enhancement.
 
-Both cloud checks run without any paid AI endpoint. They rely on external availability (DigiMoviez and Hugging Face CDN) and Vercel Hobby's finite included usage limits. For abuse resistance before broad public rollout, add authenticated access and durable rate limiting to the resource-intensive scraper.
+Both cloud checks run without any paid AI endpoint. They rely on external availability (DigiMoviez and Hugging Face CDN) and Vercel Hobby's finite included usage limits. The Vercel scraper is now **owner-code protected**: requests without the sensitive `CINESENSE_SCRAPER_ACCESS_CODE` get HTTP 401 before starting Chromium. The access code is stored in Vercel Environment Variables and entered into the browser only when the owner uses DigiMoviez. This access gate protects the included Hobby quota from anonymous calls but does not replace a distributed rate limiter for a public SaaS. Vercel Firewall API rule creation returned 404 in this project; no firewall IP-limit is claimed.
+
+### Persian browser AI status
+The Persian ParsBERT model was successfully exported and int8-quantized and its original licensed files are available as a [public GitHub release](https://github.com/AminVost/cinesense-ai-sentiment-scraper/releases/tag/persian-sentiment-onnx-v1). GitHub Release directly **failed the browser CORS test**, so this download archive is not a working browser model endpoint. To finish without paid hosting, publish the artifacts in your own free Hugging Face model repository, per [Persian hosting instructions](movie-scraper/PERSIAN_ONNX_HOSTING.md), set `PERSIAN_BROWSER_MODEL_ID` in Vercel, and verify with the browser smoke test. Until then Persian stays **Unclassified**, while the separate local Python ParsBERT remains available.
+
+### Real sentiment evaluation
+Run `node movie-scraper/tools/evaluate-sentiment.mjs human-gold.jsonl actual-predictions.jsonl` using independent human-annotated review labels. Metrics include by-language accuracy, macro-F1 and coverage. Test fixtures are *only tests of the scoring formula*, not scientific evidence of model accuracy. Claim no accuracy rate without a sufficiently large real evaluation sample.
+
+### Optional YouTube setup
+Enable the free YouTube Data API v3 in your Google Cloud account, create a restricted key and store it as `YOUTUBE_API_KEY` on Vercel in Production (and Preview if used), then redeploy. Trailer reactions remain separate from movie satisfaction. No project access exists to create a Google Cloud key on the owner's behalf.
+
