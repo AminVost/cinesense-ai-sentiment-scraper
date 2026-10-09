@@ -17,7 +17,7 @@ export function available() {
   return {
     tmdb: { enabled: Boolean(process.env.TMDB_READ_ACCESS_TOKEN || process.env.TMDB_API_KEY), type: "film", metric: "author_rating" },
     youtube: { enabled: Boolean(process.env.YOUTUBE_API_KEY), type: "trailer", metric: "unclassified" },
-    digimoviez: { enabled: false, type: "film", reason: "Playwright scraping is available only in the self-hosted backend." },
+    digimoviez: { enabled: true, type: "film", requiresUrl: true, experimental: true, metric: "browser_ai_optional" },
   };
 }
 
