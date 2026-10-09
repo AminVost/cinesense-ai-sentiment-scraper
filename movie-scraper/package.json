@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "echo Use CI source checks"
+    "lint": "echo Use CI source checks",
+    "prebuild": "node tools/youtube-live-smoke.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
