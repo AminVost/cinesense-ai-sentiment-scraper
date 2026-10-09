@@ -33,7 +33,7 @@ Requirements: Node.js 22, Python 3.10+, Chromium for Playwright, available RAM f
 - `GET /api/providers`: currently configured providers
 - `POST /api/search-movie`: `{"query":"Interstellar"}`
 - `POST /api/analyze-movie`: `{"tmdbId":157336,"sources":["tmdb"],"maxComments":20}`
-- For Vercel: use `POST /api/fetch-comments` with `{ "url": "https://digimoviez44.top/your-movie/", "maxComments": 10 }`; this on-demand Chromium endpoint is **experimental**. YouTube accepts `youtubeVideoId` (an 11-character ID).
+- For Vercel: use `POST /api/fetch-comments` with `{ "url": "https://digimoviez.com/the-invite-2026/", "maxComments": 10 }`; this on-demand Chromium endpoint is **experimental**. YouTube accepts `youtubeVideoId` (an 11-character ID).
 - For self-hosted Express only: `POST /api/analyze-movie` also accepts `digimoviez` as a source.
 - `POST /api/fetch-comments`: compatible legacy endpoint, restricted to enabled HTTPS movie hosts
 
@@ -50,3 +50,12 @@ Express listens on `127.0.0.1` by default. The existing scraper blocks off-allow
 The historical file `bertModel/fine_tuned_data.json` has duplicated pseudo-labels; it is **not used** for training. The repaired `hooshFineTune.py` now requires a manually reviewed JSONL file, at least 50 unique labeled texts with both classes represented, and a held-out split. To train (optional), install `bertModel/requirements-training.txt` and run `python hooshFineTune.py --data labeled_comments.jsonl`. Each line must be a JSON object such as `{"text":"فیلم خوبی بود","label":1}` (1 positive, 0 negative). A much larger annotated dataset is recommended for meaningful accuracy.
 
 Repository source code is MIT licensed; this **does not** license third-party review content.
+
+## Verified free cloud smoke tests (October 9, 2026)
+
+- **TMDB:** Live search and review retrieval succeeded using the private Vercel environment token.
+- **DigiMoviez:** Live on-demand headless Chromium extraction on Vercel returned HTTP 200 and **3 real comments** from `https://digimoviez.com/the-invite-2026/`. The deprecated `digimoviez44.top` no longer resolves on the deployment. This does not guarantee future access or permission from the source.
+- **Browser AI:** A real headless Chrome instance loaded `Xenova/bert-base-multilingual-uncased-sentiment`, classified an English positive sentence and returned an estimated Positive probability of about **0.981**.
+- **Language limitation:** Only Latin-script input was attempted for the browser model and detection is not independently validated; Persian remains Unclassified in the Vercel/browser edition. The local Python service still includes the separate Persian ParsBERT model. A properly converted and validated Persian ONNX model is a future enhancement.
+
+Both cloud checks run without any paid AI endpoint. They rely on external availability (DigiMoviez and Hugging Face CDN) and Vercel Hobby's finite included usage limits. For abuse resistance before broad public rollout, add authenticated access and durable rate limiting to the resource-intensive scraper.
