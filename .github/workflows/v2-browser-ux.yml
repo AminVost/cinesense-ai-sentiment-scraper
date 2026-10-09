@@ -15,17 +15,42 @@ jobs:
       - name: Install existing Playwright tests runtime
         run: npm ci --no-audit --no-fund
         working-directory: movie-scraper
+      - name: Build and start Next.js locally
+        working-directory: movie-scraper
+        run: |
+          npm run build
+          nohup npm run start -- -p 3100 > /tmp/cinesense-v2-server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail -s http://127.0.0.1:3100/multi-source >/dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/cinesense-v2-server.log
+          exit 1
       - name: Test mobile and desktop real browser interaction
         working-directory: movie-scraper
         run: |
           node --input-type=module <<'NODE'
           import {chromium} from "playwright-core";
           const browser=await chromium.launch({channel:"chrome",headless:true,args:["--no-sandbox"]});
-          const base="https://cinesense-88kqz7cys-aminvosts-projects.vercel.app";
+          const base="http://127.0.0.1:3100";
           try{
             for(const width of [390,1440]){
               const page=await browser.newPage({viewport:{width,height:844},deviceScaleFactor:1});
               const errors=[];
+              await page.route("**/api/providers",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({tmdb:{enabled:true},youtube:{enabled:true},digimoviez:{enabled:true},
+                  persianModel:{enabled:true,model:"Aminvost/cinesense-persian-sentiment-onnx"}})}));
+              await page.route("**/api/search-movie",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({results:[{id:157336,title:"Interstellar",release_date:"2014-11-05",poster_path:null}]})}));
+              await page.route("**/api/analyze-movie",route=>route.fulfill({status:200,contentType:"application/json",
+                body:JSON.stringify({
+                  sources:[{source:"tmdb",category:"film",comments:[
+                    {id:"r1",source:"tmdb",text:"A wonderful film with a profound ending.",author:"A",rating:9,sentiment:"Positive"},
+                    {id:"r2",source:"tmdb",text:"Spectacular visuals and memorable soundtrack.",author:"B",rating:8,sentiment:"Positive"}
+                  ]}],
+                  errors:[],summary:{total:2,averageRating:8.5,rated:2},trailerSummary:{total:0}
+                })}));
+
               page.on("pageerror",e=>errors.push(String(e.message).slice(0,190)));
               const response=await page.goto(base+"/multi-source",{waitUntil:"domcontentloaded",timeout:40000});
               console.log("PREVIEW_DIAGNOSTIC",JSON.stringify({status:response.status(),title:await page.title(),url:page.url(),text:(await page.locator("body").innerText()).slice(0,300)}));
