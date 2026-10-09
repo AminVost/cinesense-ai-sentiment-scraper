@@ -5,7 +5,7 @@
  */
 import { ApiError } from "./vercel-api.js";
 
-const DEFAULT_HOSTS = "digimoviez44.top";
+const DEFAULT_HOSTS = "digimoviez.com,digimoviez53.top,digimoviez44.top";
 export function allowedHosts(){
   return (process.env.DIGIMOVIEZ_ALLOWED_HOSTS || DEFAULT_HOSTS).split(",").map(x=>x.trim().toLowerCase()).filter(Boolean);
 }
