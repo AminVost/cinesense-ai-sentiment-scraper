@@ -30,6 +30,11 @@ test("ambiguous matches never silently choose different movie pages",()=>{
   ];
   assert.equal(chooseMatchingCandidate(options,x=>rankDigiCandidate(film,x),0.79,0.075).status,"ambiguous");
 });
+test("franchise titles with New or Final remain intact",()=>{
+  const movie={id:1,title:"Spider-Man: Brand New Day",original_title:"Spider-Man: Brand New Day",release_date:"2026-07-01"};
+  const trailer={id:"abcdefghijkl",title:"Spider-Man: Brand New Day (2026) - Official Trailer",channel:"Sony Pictures",publishedAt:"2026-01-01"};
+  assert.ok(rankYouTubeCandidate(movie,trailer).score>0.8);
+});
 test("invalid movie identities are rejected",()=>{
   assert.throws(()=>movieIdentity({id:0,title:"film"}));
   assert.throws(()=>movieIdentity({id:1,title:""}));
