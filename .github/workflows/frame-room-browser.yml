@@ -1,8 +1,13 @@
 name: CineSense Frame Room mobile and desktop UX
 on:
-  push:
-    branches: [feat/cinesense-brand-workspace-v3]
-    paths: [.github/workflows/frame-room-browser.yml]
+  pull_request:
+    branches: [main]
+    paths:
+      - "movie-scraper/app/**"
+      - "movie-scraper/lib/**"
+      - "movie-scraper/public/sentiment.worker.js"
+      - ".github/workflows/frame-room-browser.yml"
+  workflow_dispatch:
 permissions: { contents: read }
 jobs:
   browser-ux:
