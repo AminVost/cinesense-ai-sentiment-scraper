@@ -89,15 +89,23 @@ self.addEventListener("message", async event => {
     }
     const requiresLatin=eligible.some(item=>language(item.text)==="latin-unverified");
     const requiresPersian=eligible.some(item=>language(item.text)==="fa");
-    const classifier=requiresLatin?await getClassifier():null;
-    const persian=requiresPersian?await getPersianClassifier(persianModelId):null;
+    // Degrade per language: a failed Persian model must not block English,
+    // and a failed multilingual model must not discard valid Persian results.
+    const [latinOutcome,persianOutcome]=await Promise.allSettled([
+      requiresLatin?getClassifier():Promise.resolve(null),
+      requiresPersian?getPersianClassifier(persianModelId):Promise.resolve(null),
+    ]);
+    const classifier=latinOutcome.status==="fulfilled"?latinOutcome.value:null;
+    const persian=persianOutcome.status==="fulfilled"?persianOutcome.value:null;
+    if (!classifier && !persian && eligible.length)
+      throw Error("No applicable browser model could be loaded.");
     const results=[];
     for(let i=0;i<input.length;i++){
       const item=input[i];const lng=language(item.text);
       if(lng==="fa" && persian){
         const out=await persian(item.text.slice(0,1800),{top_k:2,truncation:true});
         results.push({key:item.key,...persianScores(out,persianModelId)});
-      }else if(lng!=="latin-unverified"){
+      }else if(lng!=="latin-unverified" || !classifier){
         results.push({key:item.key,sentiment:"Unclassified",model:null,language:lng});
       }else{
         const out=await classifier(item.text.slice(0,1800),{top_k:5,truncation:true});
