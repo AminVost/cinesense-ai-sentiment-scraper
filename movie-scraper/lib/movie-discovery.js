@@ -41,7 +41,7 @@ export function rankYouTubeCandidate(movie,video) {
     return {score:0,reason:"not_source_trailer"};
   if(!/\b(trailer|teaser)\b/i.test(title))
     return {score:0,reason:"not_trailer"};
-  if(sim<0.78)return {score:sim,reason:"title_mismatch"};
+  if(sim<0.78)return {score:0,reason:"title_mismatch",sim};
   const channel=String(video?.channel||"");
   const known=/warner bros|sony pictures|universal pictures|paramount pictures|20th century studios|marvel entertainment|a24|netflix|disney|lionsgate|focus features|searchlight pictures|pixar|film4|apple tv|amazon mgm|legendary|neon|blumhouse/i.test(channel);
   const official=/\bofficial\b/i.test(title);
