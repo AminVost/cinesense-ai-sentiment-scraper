@@ -1,10 +1,20 @@
 import { jsonError, readInput } from "../../../lib/vercel-api";
 import { isAuthorizedScrape, scraperEnabled } from "../../../lib/scraper-access";
 import { discoverAndScrapeDigiMoviez } from "../../../lib/digimoviez";
+import { unstable_cache } from "next/cache";
 import { acquireSlot, consumeLimit, limitResponse, requesterKey } from "../../../lib/request-guard";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+// Only public, source-derived comments are cached; private access credentials
+// are validated BEFORE this function is invoked and are never part of the cache.
+// Vercel's Next data cache can reduce expensive Chromium launches across instances.
+const cachedScrape = unstable_cache(
+  async (tmdbId, max) => discoverAndScrapeDigiMoviez(tmdbId, max),
+  ["digimoviez-public-comments-v1"],
+  { revalidate: 1800 }
+);
 
 export async function POST(request) {
   if (!scraperEnabled())
@@ -31,7 +41,7 @@ export async function POST(request) {
         status:503,headers:{"Retry-After":"10","Cache-Control":"no-store"}
       });
 
-    const extracted = await discoverAndScrapeDigiMoviez(Number(input.tmdbId), max);
+    const extracted = await cachedScrape(Number(input.tmdbId), max);
     return Response.json({
       comments: extracted.reviews, matchedSource: extracted.matchedSource,
       hasMore: extracted.hasMore, totalComments: extracted.reviews.length,
