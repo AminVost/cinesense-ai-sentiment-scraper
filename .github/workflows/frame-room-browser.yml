@@ -57,6 +57,10 @@ jobs:
                 })}));
 
               page.on("pageerror",e=>errors.push(String(e.message).slice(0,190)));
+              await page.goto(base+"/direct-url",{waitUntil:"domcontentloaded",timeout:40000});
+              if(!page.url().endsWith("/multi-source"))throw Error("Legacy direct-url did not redirect to the active app.");
+              await page.goto(base+"/direct-name",{waitUntil:"domcontentloaded",timeout:40000});
+              if(!page.url().endsWith("/multi-source"))throw Error("Legacy direct-name did not redirect to the active app.");
               const response=await page.goto(base+"/multi-source",{waitUntil:"domcontentloaded",timeout:40000});
               console.log("PREVIEW_DIAGNOSTIC",JSON.stringify({status:response.status(),title:await page.title(),url:page.url(),text:(await page.locator("body").innerText()).slice(0,300)}));
               if(response.status()!==200)throw Error("HTTP "+response.status());
