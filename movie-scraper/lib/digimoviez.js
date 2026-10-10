@@ -81,19 +81,24 @@ export async function discoverAndScrapeDigiMoviez(tmdbId,maxComments=10){
     const matched=selection.match;
     await openPage(page,matched.url);
     const texts=[],seen=new Set();
+    let hasMore=false;
     for(let attempt=0;attempt<3;attempt++){
       const visible=await page.locator(".comment_text_toggle p").allTextContents();
       for(const raw of visible){
         const comment=String(raw||"").trim().slice(0,2000);
         if(comment&&!seen.has(comment)){seen.add(comment);texts.push(comment);}
-        if(texts.length>=maxComments)break;
+        // One extra unique comment proves additional data exists.
+        if(texts.length>maxComments)break;
       }
-      if(texts.length>=maxComments)break;
       const more=page.locator("#ajaxLoadMoreComments").first();
-      if(!(await more.isVisible().catch(()=>false)))break;
-      await more.click({timeout:5500});
-      try{await page.waitForFunction(count=>document.querySelectorAll(".comment_text_toggle p").length>count,
-        visible.length,{timeout:5500});}catch{break;}
+      const loadMoreVisible=await more.isVisible().catch(()=>false);
+      hasMore=texts.length>maxComments||loadMoreVisible;
+      if(texts.length>=maxComments||!loadMoreVisible)break;
+      try {
+        await more.click({timeout:5000});
+        await page.waitForFunction(count=>document.querySelectorAll(".comment_text_toggle p").length>count,
+          visible.length,{timeout:4500});
+      }catch{break;}
     }
     if(!texts.length)throw new ApiError("DigiMoviez movie matched, but no public comments were found.",404);
     return {
@@ -102,11 +107,11 @@ export async function discoverAndScrapeDigiMoviez(tmdbId,maxComments=10){
         reviewType:"film",rating:null,sentiment:"Unclassified",metric:"none",model:null,
       })),
       matchedSource:{url:matched.url,title:matched.title,confidence:Number(matched.match.score.toFixed(2))},
-      hasMore:texts.length>=maxComments
+      hasMore
     };
   }catch(error){
     if(error instanceof ApiError)throw error;
-    console.error("[DigiMoviez discovery]",error?.name||"error",String(error?.message||"").slice(0,240));
+    console.error("[DigiMoviez discovery]", error?.name || "error");
     throw new ApiError("DigiMoviez search or comments are currently unavailable.",502);
   }finally{
     if(context)await context.close().catch(()=>{});

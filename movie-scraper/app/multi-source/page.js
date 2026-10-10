@@ -192,7 +192,6 @@ export default function MultiSourcePage(){
   }
 
   const stats=reviewAIStats(result,aiResults);
-  const score=summary=>summary?.positivePercent==null?"داده کافی وجود ندارد":summary.positivePercent+"٪";
   const disabled=loading||!sources.length||!selectedMovie||sources.some(s=>!providers?.[s]?.enabled)
     ||((sources.includes("youtube")||sources.includes("digimoviez"))&&!scraperKey.trim())
     ||Number(maxComments)<1||Number(maxComments)>30;
@@ -209,8 +208,6 @@ export default function MultiSourcePage(){
     .filter(c=>(aiResults[keyFor(c.source,c)]?.sentiment||"Unclassified")===seg.id).length||0}));
   const classified=stats?.classified||0;
   const pct=(count,total)=>total?Math.round(100*count/total):0;
-  const pos=filmValues[0].count,neu=filmValues[1].count,neg=filmValues[2].count;
-  const gradient=filmCount? "conic-gradient(#b7c69f 0 "+pct(pos,filmCount)+"%,#ebc986 "+pct(pos,filmCount)+"% "+pct(pos+neu,filmCount)+"%,#ed8c7a "+pct(pos+neu,filmCount)+"% "+pct(pos+neu+neg,filmCount)+"%,#555b78 "+pct(pos+neu+neg,filmCount)+"% 100%)":"#555b78";
   const protectedSelected=sources.includes("youtube")||sources.includes("digimoviez");
 
   return <main className="cr-shell" dir="rtl">

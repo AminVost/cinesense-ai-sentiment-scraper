@@ -39,3 +39,12 @@ test("invalid movie identities are rejected",()=>{
   assert.throws(()=>movieIdentity({id:0,title:"film"}));
   assert.throws(()=>movieIdentity({id:1,title:""}));
 });
+
+test("weak title matches cannot pass the lower candidate-selection threshold",()=>{
+  const target={id:99,title:"The Last Voyage of the Demeter",original_title:"The Last Voyage of the Demeter",release_date:"2023-08-01"};
+  const suspicious={id:"dummylink001",title:"The Last Voyage Official Trailer (2023)",channel:"Random",publishedAt:"2023-08-01"};
+  const ranked=rankYouTubeCandidate(target,suspicious);
+  assert.equal(ranked.reason,"title_mismatch");
+  assert.equal(ranked.score,0);
+  assert.equal(chooseMatchingCandidate([suspicious],x=>rankYouTubeCandidate(target,x),0.76,0).match,null);
+});
