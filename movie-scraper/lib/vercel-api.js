@@ -34,11 +34,34 @@ export function jsonError(error) {
 }
 
 export async function readInput(request) {
+  const MAX_BYTES = 4096;
   const length = Number(request.headers.get("content-length") || 0);
-  if (length > 4096) throw new ApiError("Request body is too large.", 413);
+  if (length > MAX_BYTES) throw new ApiError("Request body is too large.", 413);
+  // Content-Length can be absent or forged. Limit the actual streamed bytes.
+  if (!request.body) throw new ApiError("Invalid JSON request.");
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  let size = 0, text = "";
+  try {
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BYTES) {
+        await reader.cancel().catch(() => {});
+        throw new ApiError("Request body is too large.", 413);
+      }
+      text += decoder.decode(value, {stream:true});
+    }
+    text += decoder.decode();
+  } catch(error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError("Invalid JSON request.");
+  } finally { reader.releaseLock(); }
   let data;
-  try { data = await request.json(); } catch { throw new ApiError("Invalid JSON request."); }
-  if (!data || typeof data !== "object" || Array.isArray(data)) throw new ApiError("Invalid JSON object.");
+  try { data = JSON.parse(text); } catch { throw new ApiError("Invalid JSON request."); }
+  if (!data || typeof data !== "object" || Array.isArray(data))
+    throw new ApiError("Invalid JSON object.");
   return data;
 }
 
@@ -174,39 +197,46 @@ async function tmdbReviews(tmdbId, max) {
 async function youtubeComments(videoId, max) {
   const key = process.env.YOUTUBE_API_KEY?.trim();
   if (!key) throw new ApiError("YouTube API is not configured.", 503);
-  if (typeof videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+  if (typeof videoId !== "string" || !/^[A-Za-z0-9_-]{11}$/.test(videoId))
     throw new ApiError("Provide a valid 11-character YouTube video ID.");
-  }
-  const comments = [];
-  let token = "", hasMore = false;
+
+  const comments = [], seenIds = new Set(), visitedTokens = new Set();
+  let token = "", hasMore = false, page = 0;
+  // A repeated/empty page token must never hold a serverless function open.
   do {
+    if (token && visitedTokens.has(token)) break;
+    if (token) visitedTokens.add(token);
+    page++;
     const url = new URL(YOUTUBE_BASE);
     for (const [k, v] of Object.entries({
-      key, part: "snippet", videoId,
-      maxResults: Math.min(100, max - comments.length),
-      textFormat: "plainText",
-      ...(token ? { pageToken: token } : {}),
+      key, part: "snippet", videoId, maxResults: Math.min(100, max - comments.length),
+      textFormat: "plainText", ...(token ? { pageToken: token } : {}),
     })) url.searchParams.set(k, String(v));
     let response;
-    try { response = await timeoutRequest(url.toString()); }
+    try { response = await timeoutRequest(url.toString(), { next: { revalidate: 600 } }); }
     catch { throw new ApiError("Could not reach YouTube Data API.", 502); }
+    if (response.status === 403 || response.status === 429)
+      throw new ApiError("YouTube API quota or permissions prevented comment retrieval.", 429);
     if (!response.ok) throw new ApiError("YouTube Data API failed (HTTP " + response.status + ").", 502);
     const data = await response.json();
     for (const item of data.items || []) {
-      const c = item.snippet?.topLevelComment;
-      const text = String(c?.snippet?.textOriginal || "").trim().slice(0, 12000);
-      if (!text) continue;
+      const comment = item.snippet?.topLevelComment;
+      const id = String(comment?.id || "");
+      const text = String(comment?.snippet?.textOriginal || "").trim().slice(0, 12000);
+      if (!id || !text || seenIds.has(id)) continue;
+      seenIds.add(id);
       comments.push({
-        id: String(c.id), text, source: "youtube", reviewType: "trailer",
-        sourceUrl: "https://www.youtube.com/watch?v=" + videoId + "&lc=" + encodeURIComponent(c.id),
-        author: c.snippet?.authorDisplayName || null, rating: null,
+        id, text, source: "youtube", reviewType: "trailer",
+        sourceUrl: "https://www.youtube.com/watch?v=" + videoId + "&lc=" + encodeURIComponent(id),
+        author: comment.snippet?.authorDisplayName || null, rating: null,
         sentiment: "Unclassified", metric: "none", model: null,
       });
+      if (comments.length >= max) break;
     }
-    token = data.nextPageToken || "";
+    token = String(data.nextPageToken || "");
     hasMore = Boolean(token);
-  } while (token && comments.length < max);
-  return { reviews: comments.slice(0, max), hasMore };
+  } while (token && comments.length < max && page < 3);
+  return { reviews: comments, hasMore };
 }
 
 export async function analyzeMovie(data) {
