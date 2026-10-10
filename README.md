@@ -1,55 +1,24 @@
-# CineSense — Multi-Source Movie Reviews
+# CineSense — Film Review Intelligence
 
-CineSense is a self-hosted prototype that collects permitted film reviews and classifies their sentiment. No paid AI subscription or paid API is required. You still need free API credentials, an internet connection for first-time model downloads, and your own CPU/RAM.
+**Production:** [cinesense.aminvost.ir](https://cinesense.aminvost.ir) — Next.js 15 + Vercel Functions.
 
-## Providers
+This repository contains an active free-tier web app **and two older R&D projects**. For authoritative architectural details, operational limitations, security boundaries and deployment commands, read **[movie-scraper/README.md](movie-scraper/README.md)**.
 
-| Provider | Data | Configuration | Notes |
-| --- | --- | --- | --- |
-| TMDB | Written movie reviews and search | Free `TMDB_READ_ACCESS_TOKEN` or `TMDB_API_KEY` | API is primarily for non-commercial use, with required attribution. |
-| DigiMoviez | Comments for an individual movie URL | `DIGIMOVIEZ_ALLOWED_HOSTS` | Playwright; only enable sites you have permission to scrape. |
-| YouTube | Trailer comments | Optional free `YOUTUBE_API_KEY` | A video ID must be entered manually; trailer reactions are not added to film satisfaction. |
+## Current production architecture
 
-*Note:* "free" is not synonymous with unlimited or commercially licensed. YouTube API has quota and separate data restrictions; TMDB's usage/attribution terms apply.
+| Directory | Status | Purpose |
+| --- | --- | --- |
+| `movie-scraper/` | **ACTIVE / deployed** | Next.js Frame Room web UI, TMDB and YouTube Data APIs, DigiMoviez Chromium crawler, client-side Transformers.js and Persian ONNX |
+| `express-scraper/` | Local legacy prototype | Express-based scraper for local R&D; not used by Vercel |
+| `bertModel/` | Local/offline ML R&D | Python training, evaluation and optional FastAPI service; **not running** on Vercel |
 
+**Workflow:** choose a film from TMDB → automatically resolve its matching sources → fetch movie reviews and trailer reactions independently → optionally run browser-local AI sentiment → explore source-labeled results. No user-supplied DigiMoviez URL or YouTube video ID is required. The current UI is `/` or `/multi-source`. Legacy paths redirect to the current UI.
 
-## Deploy on Vercel Hobby
+**Credentials:** `TMDB_READ_ACCESS_TOKEN`, `YOUTUBE_API_KEY` and `CINESENSE_SCRAPER_ACCESS_CODE` are server-only. The public Persian model ID is `PERSIAN_BROWSER_MODEL_ID`. See [sample configuration](movie-scraper/.env.example). Do not commit credentials.
 
-Import the GitHub repository as a **new Vercel project** using Root Directory `movie-scraper`. Configure a server-only `TMDB_READ_ACCESS_TOKEN` in the project settings. The Vercel-compatible API routes are built into Next.js and do not require Express/Python for official source reviews. The cloud edition supports **browser-local, opt-in sentiment inference** with a quantized Hugging Face model (approximately 168 MB on first load) and an **experimental bounded Playwright scraper** for DigiMoviez on Vercel Functions. Browser AI supports English and five European languages; Persian model inference remains in the local Python service. The cloud UI shows author ratings and AI-inferred text sentiment separately; neither is a verified audience-satisfaction survey. DigiMoviez availability depends on the site's reachability, selectors, and permission to scrape. For the subdomain `cinesense.aminvost.ir`, see [VERCEL_DEPLOY.md](movie-scraper/VERCEL_DEPLOY.md). Vercel Hobby and TMDB developer API are for non-commercial usage subject to their conditions.
+**Usage limits:** YouTube has a strict API-unit quota and the Vercel Hobby plan has usage ceilings. DigiMoviez is an owner-code-protected on-demand serverless Chromium task, not an always-running crawler. Public source-derived DigiMoviez results cache for 30 minutes. Basic rate controls and in-process Chromium slots are **per warm instance only**; these are *not* a globally distributed limiter or durable queue. Use a shared quota/queue before expanding to public access.
 
-## Start locally
-
-Requirements: Node.js 22, Python 3.10+, Chromium for Playwright, available RAM for local BERT models.
-
-1. `cd bertModel`, create a Python virtual environment, then run `pip install -r requirements.txt` and `uvicorn fastApi:app --host 127.0.0.1 --port 8000`.
-2. In `express-scraper`, copy `.env.example` to `.env` and put in a **free** TMDB token/key. Set `YOUTUBE_API_KEY` only if desired. Run `npm ci`, `npx playwright install chromium`, then `npm start`.
-3. In `movie-scraper`, run `npm ci` and `npm run dev`.
-4. Open `http://localhost:3000`. The original single-URL interface remains at `/direct-url`.
-
-**AI model behavior:** The inference service starts without prompting for input or downloading models. It downloads a model from Hugging Face on the first matching request if it is not already cached. A disconnected machine must pre-download required models. Persian: `HooshvareLab/bert-fa-base-uncased-sentiment-deepsentipers-binary`, unless a `fine_tuned_model` folder exists. English, French, German, Spanish, Italian and Dutch: `nlptown/bert-base-multilingual-uncased-sentiment`. Other languages return `Unclassified` (not falsely `Negative`). Model outputs are estimates, not verified satisfaction or calibrated probabilities.
-
-## API
-
-- `GET /api/providers`: currently configured providers
-- `POST /api/search-movie`: `{"query":"Interstellar"}`
-- `POST /api/analyze-movie`: `{"tmdbId":157336,"sources":["tmdb"],"maxComments":20}`
-- On Vercel: `POST /api/analyze-movie` with `{"sources":["tmdb","youtube"],"tmdbId":157336,"maxComments":10}` (private owner access header for YouTube). For DigiMoviez: `POST /api/fetch-comments` with `{"tmdbId":157336,"maxComments":10}` and the same private owner access header. Neither API accepts/uses a user-supplied movie URL or video ID. Matching details are returned in each source `matchedSource`.
-- For self-hosted Express only: `POST /api/analyze-movie` also accepts `digimoviez` as a source.
-- `POST /api/fetch-comments`: compatible legacy endpoint, restricted to enabled HTTPS movie hosts
-
-Returned `sources[]` each have their own data, `summary` covers film reviews only, `trailerSummary` covers YouTube only, and `errors[]` indicates partial failures.
-
-## Automated checks
-
-GitHub Actions runs dependency-free validation tests, JavaScript/Python syntax checks, Node package installation, mocked API integration tests, and a Next.js production build. A green workflow does **not** imply real API credentials, successful live scraping, or validated sentiment accuracy. These still need end-to-end tests.
-
-## Security and limitations
-
-Express listens on `127.0.0.1` by default. The existing scraper blocks off-allowlist network requests, navigation redirects, WebSockets, and service workers, and limits concurrent browsers/pagination. Keep it behind a trusted gateway if deployed. Public deployment still requires user authentication, abuse/rate limiting, compliance with source terms, and real-world reliability testing. Some websites need scripts from external hosts, which are intentionally blocked until explicitly and safely supported.
-
-The historical file `bertModel/fine_tuned_data.json` has duplicated pseudo-labels; it is **not used** for training. The repaired `hooshFineTune.py` now requires a manually reviewed JSONL file, at least 50 unique labeled texts with both classes represented, and a held-out split. To train (optional), install `bertModel/requirements-training.txt` and run `python hooshFineTune.py --data labeled_comments.jsonl`. Each line must be a JSON object such as `{"text":"فیلم خوبی بود","label":1}` (1 positive, 0 negative). A much larger annotated dataset is recommended for meaningful accuracy.
-
-Repository source code is MIT licensed; this **does not** license third-party review content.
+**License & data:** App source code uses the repository license; it does not grant rights to third-party movie reviews. Verify TMDB, YouTube and website usage terms before external/commercial launch.
 
 ## Verified free cloud smoke tests (October 9, 2026)
 
