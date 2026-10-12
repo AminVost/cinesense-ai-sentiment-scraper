@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { dbReady, sql } from "./db.js";
+import {sharedRateLimit} from "./db-rate.js";
 
 const DAY_MS = 86_400_000;
 export const CACHE_DAYS = 20;
@@ -64,12 +65,15 @@ export async function cachedMovieSource(tmdbId, source, maxComments, load) {
       if(fresh)return fresh;
     }
     const busy=new Error("دریافت اطلاعات این فیلم در حال انجام است؛ چند لحظه دیگر امتحان کنید.");
-    busy.status=503; throw busy;
+    busy.status=503; busy.publicMessage=true; throw busy;
   }
   try {
     // Another fetch may have won between our initial SELECT and lock acquisition.
     const rechecked=await snapshot();
     if(rechecked)return rechecked;
+    const budget=await sharedRateLimit("provider-daily-misses",source,
+      source==="youtube"?40:source==="digimoviez"?30:500,86400);
+    if(!budget.allowed){const e=new Error("سهمیه دریافت داده جدید این منبع امروز تکمیل شده است.");e.status=429;e.publicMessage=true;throw e;}
     const data=await load();
     if(!data || !Array.isArray(data.comments))throw Error("Source returned an invalid response");
     const time=new Date();
