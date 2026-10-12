@@ -69,6 +69,7 @@ export default function MultiSourcePage(){
   const [searchBusy,setSearchBusy]=useState(false);
   const [providers,setProviders]=useState(null);
   const [authUser,setAuthUser]=useState(null);
+  const [accountsEnabled,setAccountsEnabled]=useState(false);
   const [modelPreviouslyLoaded,setModelPreviouslyLoaded]=useState(false);
   const [storageMessage,setStorageMessage]=useState("");
   const [result,setResult]=useState(null);
@@ -81,7 +82,7 @@ export default function MultiSourcePage(){
   const workerRef=useRef(null);
   const runId=useRef(0);
   useEffect(()=>{
-    fetch("/api/auth/me",{cache:"no-store"}).then(r=>r.json()).then(x=>setAuthUser(x.user||null)).catch(()=>{});
+    fetch("/api/auth/me",{cache:"no-store"}).then(r=>r.json()).then(x=>{setAuthUser(x.user||null);setAccountsEnabled(Boolean(x.enabled));}).catch(()=>{});
     try{setModelPreviouslyLoaded(Boolean(localStorage.getItem("cs-model-run-v1")));}catch{}
     fetch("/api/providers").then(async response=>{
       if(!response.ok)throw Error("Cannot load providers");
@@ -248,7 +249,7 @@ export default function MultiSourcePage(){
       <header className="cr-top">
         <div className="cr-brand">CineSense <small>اتاق تحلیل فیلم</small></div>
         <div className="cr-top-end">
-          <a href="/account" className="cr-account-link">{authUser?"حساب من":"ورود / ثبت‌نام"}</a>
+          {accountsEnabled&&<a href="/account" className="cr-account-link">{authUser?"حساب من":"ورود / ثبت‌نام"}</a>}
           <span className="cr-top-code">FRAME / 001</span>
           <span className="cr-online"><i/> موتور تحلیل آماده</span>
         </div>
