@@ -2,6 +2,7 @@ import {sql} from "../../../../lib/db.js";
 import {authThrottle,passwordHash,validateEmail,validatePassword,newEmailToken,sendAccountMail} from "../../../../lib/auth.js";
 import {readAuthBody,credentialsAvailable,unavailable,secureReply} from "../../../../lib/api-auth.js";
 import {jsonError} from "../../../../lib/vercel-api.js";
+import {sharedRateLimit} from "../../../../lib/db-rate.js";
 export const runtime="nodejs";
 export async function POST(request){
   if(!credentialsAvailable())return unavailable();
@@ -30,6 +31,8 @@ export async function POST(request){
         throw e;
       }
     }
+    const mailBudget=await sharedRateLimit("account-email-global","daily",50,86400);
+    if(!mailBudget.allowed)return secureReply({error:"ظرفیت ارسال ایمیل امروز تکمیل است."},429);
     const oneTime=await newEmailToken(userId,"verify");
     await sendAccountMail(email,"verify",oneTime);
     return secureReply({message:"لینک تأیید ایمیل ارسال شد. پوشه Spam را هم بررسی کنید."},201);
