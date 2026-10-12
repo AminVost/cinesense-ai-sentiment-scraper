@@ -30,7 +30,7 @@ export async function POST(req) {
     if (result.sources?.length) {
       // Store only the user's film selection; review snapshots are shared
       // independently in the source cache. Never persist owner credentials.
-      await recordHistory(req,Number(input.tmdbId),input.movieTitle,result.sources.map(x=>x.source)).catch(()=>{});
+      await   recordHistory(req,Number(input.tmdbId),input.movieTitle,Array.isArray(input.requestedSources)?input.requestedSources:result.sources.map(x=>x.source)).catch(()=>{});
     }
     return Response.json(result,{headers:{"Cache-Control":"no-store"}});
   } catch(error) {
