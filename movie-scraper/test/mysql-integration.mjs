@@ -2,13 +2,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import mysql from "mysql2/promise";
 import {database,sql} from "../lib/db.js";
 import {cachedMovieSource,CACHE_DAYS} from "../lib/shared-cache.js";
 import {sharedRateLimit} from "../lib/db-rate.js";
 import {passwordHash,passwordVerify,createSession,currentUser,validateEmail} from "../lib/auth.js";
 
 if(!process.env.DATABASE_URL)throw Error("DATABASE_URL is required for real DB integration tests");
-await database().query(readFileSync(new URL("../db/schema.sql",import.meta.url),"utf8"));
+const schemaConnection=await mysql.createConnection({
+  host:"127.0.0.1",port:3306,user:"cinesense_ci",password:"testing_mysql",database:"cinesense_ci",
+  multipleStatements:true,
+});
+await schemaConnection.query(readFileSync(new URL("../db/schema.sql",import.meta.url),"utf8"));
+await schemaConnection.end();
 
 test("MySQL source cache reuses film data between independent users",async()=>{
   let upstream=0;
