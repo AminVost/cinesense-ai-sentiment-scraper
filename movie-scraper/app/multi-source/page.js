@@ -134,12 +134,12 @@ export default function MultiSourcePage(){
       const requests=[];
       if(ordinary.length){
         requests.push(postJson("/api/analyze-movie",{
-          sources:ordinary,tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,maxComments:Number(maxComments)
+          sources:ordinary,requestedSources:sources,tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,maxComments:Number(maxComments)
         },scraperKey).then(data=>({type:"ordinary",data})));
       }
       if(sources.includes("digimoviez")){
         requests.push(postJson("/api/fetch-comments",{
-          tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,maxComments:Math.min(10,Number(maxComments))
+          tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,requestedSources:sources,maxComments:Math.min(10,Number(maxComments))
         },scraperKey).then(data=>({type:"digimoviez",data})));
       }
       const settled=await Promise.allSettled(requests);
@@ -158,7 +158,7 @@ export default function MultiSourcePage(){
         }else{
           const comments=data.comments||[];
           groups.push({source:"digimoviez",category:"film",comments,hasMore:data.hasMore,matchedSource:data.matchedSource,
-            summary:metric(comments)});
+            summary:metric(comments),cache:data.cache});
         }
       });
       if(!groups.length&&errors.length)throw Error(errors.map(e=>e.error).join(" / "));
@@ -448,7 +448,7 @@ export default function MultiSourcePage(){
               <strong>{SOURCES.find(x=>x.id===g.source)?.name||g.source}</strong>
               <em>{g.comments.length}</em>
               <p title={g.matchedSource?.title||""}>{g.matchedSource?.title||"نقدهای فیلم"}
-                {g.matchedSource?.confidence!=null?" · تطبیق "+Math.round(g.matchedSource.confidence*100)+"٪":""}</p>
+                {g.matchedSource?.confidence!=null?" · تطبیق "+Math.round(g.matchedSource.confidence*100)+"٪":""}{g.cache?.status==="hit"?" · ذخیره‌شده":g.cache?.status==="refreshed"?" · به‌روزشد":" "}</p>
               {g.matchedSource?.url?<a href={g.matchedSource.url} target="_blank" rel="noopener noreferrer">بازکردن ↗</a>:<span/>}
             </div>)}
           </div>
