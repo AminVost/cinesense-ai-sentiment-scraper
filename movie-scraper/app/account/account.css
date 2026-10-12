@@ -1,0 +1,23 @@
+.ac-layout{min-height:100svh;background:#10110f;color:#eae7dd;font:14px/1.9 "Estedad Variable",Tahoma,sans-serif}
+.ac-layout *{box-sizing:border-box}.ac-layout button,.ac-layout input{font:inherit}
+.ac-header{height:74px;border-bottom:1px solid #393a32;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,5vw,76px);gap:14px}
+.ac-brand{text-decoration:none;color:#eae7dd;font:800 22px ui-sans-serif,system-ui;letter-spacing:-1px}.ac-brand span{font-size:11px;font-weight:450;color:#ed6748}
+.ac-back{color:#bbb8ab;text-decoration:none;font-size:12px}.ac-back:hover{color:#ed6748}
+.ac-content{max-width:630px;margin:0 auto;padding:66px 22px}.ac-index{font:700 10px ui-monospace,monospace;letter-spacing:2px;color:#ed6748;direction:ltr;text-align:right}
+.ac-content h1{font-size:33px;margin:8px 0 27px}.ac-panel{border:1px solid #393a32;background:#181a17;padding:28px;min-width:0}
+.ac-panel h2{font-size:17px;font-weight:800;margin:8px 0 20px}.ac-tabs{display:flex;border-bottom:1px solid #393a32;gap:23px;margin-bottom:26px}
+.ac-tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:5px 0 12px;color:#8e8f83;cursor:pointer}
+.ac-tabs button[data-active=true]{border-color:#ed6748;color:#eae7dd}
+.ac-panel label{display:block;font-size:12px;color:#c4c2b6;margin:0 0 17px}
+.ac-panel input{display:block;width:100%;background:#10110f;border:1px solid #53554a;color:#eae7dd;padding:12px;font-size:14px;border-radius:0;margin-top:8px}
+.ac-panel input:focus{outline:2px solid #ed6748;outline-offset:1px}
+.ac-primary{display:block;width:100%;background:#ed6748;color:#151511;border:0;font-weight:800;padding:12px 20px;margin:16px 0;cursor:pointer}
+.ac-primary:disabled{opacity:.5;cursor:wait}.ac-text-btn{border:0;background:none;color:#e6a18b;padding:8px 0;cursor:pointer}
+.ac-muted{color:#8f9185;font-size:11px;margin:20px 0 0}.ac-error{color:#ee9888;font-size:12px}.ac-success{color:#b7c69f;font-size:12px}
+.ac-line{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:27px;overflow-wrap:anywhere}
+.ac-btn-subtle{background:#303129;color:#eae7dd;border:1px solid #4e5044;padding:8px 13px;cursor:pointer}
+.ac-history-row{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #393a32;padding:13px 0}
+.ac-history-row strong{display:block;font-size:13px}.ac-history-row small{display:block;font-size:10px;color:#a6a497}
+.ac-history-row a{font-size:11px;color:#ed6748;text-decoration:none;white-space:nowrap}
+.ac-danger{margin-top:35px;padding-top:16px;border-top:1px solid #393a32}.ac-danger button{background:none;border:0;color:#eb9688;cursor:pointer;font-size:11px;padding:8px 0}
+@media(max-width:580px){.ac-header{height:60px;padding:0 17px}.ac-content{padding:35px 15px}.ac-panel{padding:20px}.ac-content h1{font-size:25px}.ac-history-row{align-items:flex-start}}
