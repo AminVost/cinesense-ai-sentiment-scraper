@@ -5,6 +5,7 @@
  */
 const TMDB_BASE = "https://api.themoviedb.org/3";
 import { movieIdentity, rankYouTubeCandidate, chooseMatchingCandidate } from "./movie-discovery.js";
+import {cachedMovieSource} from "./shared-cache.js";
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3/commentThreads";
 const YOUTUBE_SEARCH = "https://www.googleapis.com/youtube/v3/search";
 
@@ -25,12 +26,12 @@ export function available() {
 }
 
 export function jsonError(error) {
-  const status = error instanceof ApiError ? error.status : 502;
-  if (!(error instanceof ApiError)) {
+  const status = error instanceof ApiError ? error.status : (error?.publicMessage && Number.isInteger(error.status) ? error.status : 502);
+  if (!(error instanceof ApiError) && !error?.publicMessage) {
     // Do not log request configs or authorization credentials.
     console.error("[CineSense API]", error?.name || "unknown", error?.cause?.code || "");
   }
-  return Response.json({ error: error instanceof ApiError ? error.message : "External service unavailable." }, { status });
+  return Response.json({ error: error instanceof ApiError || error?.publicMessage ? error.message : "External service unavailable." }, { status });
 }
 
 export async function readInput(request) {
@@ -250,17 +251,18 @@ export async function analyzeMovie(data) {
   if (unique.includes("youtube") && (!Number.isSafeInteger(Number(data.tmdbId)) || Number(data.tmdbId) < 1)) throw new ApiError("Choose a movie for automatic trailer discovery.");
 
   const result = await Promise.allSettled(unique.map(async source => {
-    if(source==="tmdb"){
-      const {reviews,hasMore}=await tmdbReviews(Number(data.tmdbId),max);
-      return {source,hasMore,comments:reviews,category:"film",
-        summary:summary(reviews,"author_rating")};
-    }
-    const movie=await getSelectedMovie(data.tmdbId);
-    const matched=await discoverYouTubeTrailer(movie);
-    const {reviews,hasMore}=await youtubeComments(matched.videoId,max);
-    return {source,hasMore,comments:reviews,category:"trailer",
-      matchedSource:matched,
-      summary:summary(reviews,"none")};
+    const {data:group,cache}=await cachedMovieSource(Number(data.tmdbId),source,max,async()=>{
+      if(source==="tmdb"){
+        const {reviews,hasMore}=await tmdbReviews(Number(data.tmdbId),max);
+        return {source,hasMore,comments:reviews,category:"film"};
+      }
+      const movie=await getSelectedMovie(data.tmdbId);
+      const matched=await discoverYouTubeTrailer(movie);
+      const {reviews,hasMore}=await youtubeComments(matched.videoId,max);
+      return {source,hasMore,comments:reviews,category:"trailer",matchedSource:matched};
+    });
+    return {...group,cache,
+      summary:summary(group.comments,source==="tmdb"?"author_rating":"none")};
   }));
   const successes = [], errors = [];
   result.forEach((entry, index) => {
