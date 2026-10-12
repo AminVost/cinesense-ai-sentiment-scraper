@@ -49,7 +49,7 @@ export async function POST(request){
         return {comments:item.reviews,matchedSource:item.matchedSource,hasMore:item.hasMore};
       }finally{release();}
     });
-    await recordHistory(request,tmdbId,input.movieTitle,["digimoviez"]).catch(()=>{});
+    await recordHistory(request,tmdbId,input.movieTitle,Array.isArray(input.requestedSources)?input.requestedSources:["digimoviez"]).catch(()=>{});
     return Response.json({comments:data.comments,matchedSource:data.matchedSource,
       hasMore:data.hasMore,totalComments:data.comments.length,cache},
       {headers:{"Cache-Control":"no-store"}});
