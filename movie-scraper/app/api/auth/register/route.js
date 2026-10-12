@@ -18,6 +18,9 @@ export async function POST(request){
     if(existing.length){
       if(existing[0].verified_at)return secureReply({message:"اگر این ایمیل قابل ثبت باشد، راهنمای تأیید برای آن ارسال می‌شود."});
       userId=existing[0].id;
+      // The verified email owner should be able to re-register an unverified
+      // address; only the latest registration password can verify its link.
+      await sql("UPDATE cs_users SET password_hash=? WHERE id=? AND verified_at IS NULL",[hashed,userId]);
     }else{
       try{
         const saved=await sql("INSERT INTO cs_users (email,password_hash) VALUES(?,?)",[email,hashed]);
