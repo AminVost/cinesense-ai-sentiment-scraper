@@ -68,6 +68,9 @@ export default function MultiSourcePage(){
   const [aiComplete,setAiComplete]=useState(false);
   const [searchBusy,setSearchBusy]=useState(false);
   const [providers,setProviders]=useState(null);
+  const [authUser,setAuthUser]=useState(null);
+  const [modelPreviouslyLoaded,setModelPreviouslyLoaded]=useState(false);
+  const [storageMessage,setStorageMessage]=useState("");
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState("");
@@ -78,6 +81,8 @@ export default function MultiSourcePage(){
   const workerRef=useRef(null);
   const runId=useRef(0);
   useEffect(()=>{
+    fetch("/api/auth/me",{cache:"no-store"}).then(r=>r.json()).then(x=>setAuthUser(x.user||null)).catch(()=>{});
+    try{setModelPreviouslyLoaded(Boolean(localStorage.getItem("cs-model-run-v1")));}catch{}
     fetch("/api/providers").then(async response=>{
       if(!response.ok)throw Error("Cannot load providers");
       return response.json();
@@ -118,12 +123,12 @@ export default function MultiSourcePage(){
       const requests=[];
       if(ordinary.length){
         requests.push(postJson("/api/analyze-movie",{
-          sources:ordinary,tmdbId:selectedMovie?.id,maxComments:Number(maxComments)
+          sources:ordinary,tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,maxComments:Number(maxComments)
         },scraperKey).then(data=>({type:"ordinary",data})));
       }
       if(sources.includes("digimoviez")){
         requests.push(postJson("/api/fetch-comments",{
-          tmdbId:selectedMovie?.id,maxComments:Math.min(10,Number(maxComments))
+          tmdbId:selectedMovie?.id,movieTitle:selectedMovie?.title,maxComments:Math.min(10,Number(maxComments))
         },scraperKey).then(data=>({type:"digimoviez",data})));
       }
       const settled=await Promise.allSettled(requests);
@@ -159,6 +164,7 @@ export default function MultiSourcePage(){
   function startLocalAI(){
     if(!result||aiBusy)return;
     resetAnalysis();
+    if(navigator.storage?.persist){navigator.storage.persist().then(granted=>setStorageMessage(granted?"ذخیره مدل محافظت‌شده است.":"کش فعال است؛ مرورگر ممکن است برای آزادسازی فضا آن را حذف کند.")).catch(()=>{});}
     const id=runId.current;
     const comments=result.sources.flatMap(g=>g.comments.map(c=>({key:keyFor(g.source,c),text:c.text})));
     if(!comments.length){setAiError("نظری برای تحلیل موجود نیست.");return;}
@@ -179,6 +185,7 @@ export default function MultiSourcePage(){
         const next=Object.fromEntries(data.results.map(item=>[item.key,item]));
         setAiResults(next);setAiBusy(false);setAiComplete(true);
         setAiProgress("تحلیل مرورگری کامل شد.");
+        if(data.results.some(x=>x.model)){try{localStorage.setItem("cs-model-run-v1",new Date().toISOString());setModelPreviouslyLoaded(true);}catch{}}
         worker.terminate();workerRef.current=null;
       }
     };
@@ -193,7 +200,7 @@ export default function MultiSourcePage(){
 
   const stats=reviewAIStats(result,aiResults);
   const disabled=loading||!sources.length||!selectedMovie||sources.some(s=>!providers?.[s]?.enabled)
-    ||((sources.includes("youtube")||sources.includes("digimoviez"))&&!scraperKey.trim())
+    ||((sources.includes("youtube")||sources.includes("digimoviez"))&&!scraperKey.trim()&&!authUser)
     ||Number(maxComments)<1||Number(maxComments)>30;
   const filmCount=result?.sources.filter(g=>g.category==="film").reduce((n,g)=>n+g.comments.length,0)||0;
   const totalCount=result?.sources.reduce((n,g)=>n+g.comments.length,0)||0;
@@ -230,6 +237,7 @@ export default function MultiSourcePage(){
       <header className="cr-top">
         <div className="cr-brand">CineSense <small>اتاق تحلیل فیلم</small></div>
         <div className="cr-top-end">
+          <a href="/account" className="cr-account-link">{authUser?"حساب من":"ورود / ثبت‌نام"}</a>
           <span className="cr-top-code">FRAME / 001</span>
           <span className="cr-online"><i/> موتور تحلیل آماده</span>
         </div>
@@ -324,7 +332,8 @@ export default function MultiSourcePage(){
                   </div>
                 </div>
               </details>
-              {protectedSelected&&!scraperKey.trim()&&<div className="cr-access-note">برای YouTube و DigiMoviez کد خصوصی را در تنظیمات وارد کن.</div>}
+              {protectedSelected&&!scraperKey.trim()&&!authUser&&<div className="cr-access-note">برای این منابع وارد حساب کاربری شو یا کد خصوصی را وارد کن.</div>}
+              <div className="cr-access-note">{modelPreviouslyLoaded?"مدل AI قبلاً روی این مرورگر اجرا شده و معمولاً از کش بارگذاری می‌شود.":"مدل AI در اولین تحلیل دانلود و در کش مرورگر نگهداری می‌شود."} {storageMessage}</div>
               {error&&<div className="cr-status" data-danger="true" role="alert"><Icon name="info" size={16}/>{error}</div>}
               <div className="cr-rule"/>
               <div className="cr-actions">
