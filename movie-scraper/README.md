@@ -56,3 +56,13 @@ Real browser UI tests live in GitHub Actions; the expensive live DigiMoviez smok
 2. Add durable structured tracing and alerting; set provider quota/budget alerts.
 3. Establish automated *human-labeled* Persian/English model evaluation before claiming classification accuracy.
 4. Split UI from `app/multi-source/page.js` into small modules (data hooks, source selector, report, reviews), with explicit integration tests.
+
+## Shared MySQL cache and optional accounts (2026-10)
+
+Feature code is present but the MySQL/database-backed capabilities activate only after a real managed MySQL 8+ database has been connected **and the schema has been applied**. The app's previous source fetching, owner-code protection and on-device inference continue to work with no database. For fully verified email/password account signup, a free Resend account + verified sender are additionally required. The UI hides unconfigured account entry.
+
+See the complete [Persian setup and deployment guide](ACCOUNT_CACHE_SETUP_FA.md) and [schema](db/schema.sql).
+
+Snapshots are keyed by TMDB movie ID and provider and reused across authenticated and owner-authorized requests for up to 20 days. Source refresh uses a MySQL lease to coalesce expensive concurrent crawls across serverless instances, with a shared quota on costly cache misses. MySQL 8 ephemeral-container integration tests run on every PR. Browser models opt into Cache Storage persistence; user authentication **does not synchronize multi-hundred-MB weights across devices**.
+
+This feature intentionally does not write untrusted browser-computed AI labels into the global DB; sentiment is recomputed locally on each device. User data stored server-side is limited to account email, salted scrypt password hash, opaque session hashes and selected film history. Users can delete their accounts.

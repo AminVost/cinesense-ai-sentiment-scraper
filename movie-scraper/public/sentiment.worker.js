@@ -7,6 +7,10 @@ import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transfo
 const MODEL = "Xenova/bert-base-multilingual-uncased-sentiment";
 const SUPPORTED = ["en", "de", "fr", "es", "it", "nl"];
 env.allowLocalModels = false;
+// Transformer model weight files are re-used across sessions via Cache Storage
+// when available; the browser may evict them under storage pressure.
+env.useBrowserCache = true;
+
 let classifierPromise;
 let persianClassifierPromise;
 

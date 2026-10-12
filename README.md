@@ -20,6 +20,10 @@ This repository contains an active free-tier web app **and two older R&D project
 
 **License & data:** App source code uses the repository license; it does not grant rights to third-party movie reviews. Verify TMDB, YouTube and website usage terms before external/commercial launch.
 
+## Optional production MySQL and verified accounts
+
+The new shared **20-day review snapshot cache**, verified email/password registration, per-user film history and database-wide provider budgets have been implemented and tested against MySQL 8. **They do not activate just by merging code**: connect managed MySQL, apply schema, and configure a verified Resend sender. Until then, the original API and owner-only sources remain functional, while the account UI stays hidden. See [Persian installation steps](movie-scraper/ACCOUNT_CACHE_SETUP_FA.md) and [MySQL integration workflow](.github/workflows/mysql-integration.yml). Do not insert account secrets into GitHub or public variables.
+
 ## Verified free cloud smoke tests (October 9, 2026)
 
 - **TMDB:** Live search and review retrieval succeeded using the private Vercel environment token.
