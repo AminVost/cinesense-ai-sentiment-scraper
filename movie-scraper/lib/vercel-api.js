@@ -5,6 +5,7 @@
  */
 const TMDB_BASE = "https://api.themoviedb.org/3";
 import { movieIdentity, rankYouTubeCandidate, chooseMatchingCandidate } from "./movie-discovery.js";
+import { withSharedSourceCache } from "./shared-cache.js";
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3/commentThreads";
 const YOUTUBE_SEARCH = "https://www.googleapis.com/youtube/v3/search";
 
@@ -249,19 +250,20 @@ export async function analyzeMovie(data) {
   if (unique.includes("tmdb") && (!Number.isSafeInteger(Number(data.tmdbId)) || Number(data.tmdbId) < 1)) throw new ApiError("Choose a movie first.");
   if (unique.includes("youtube") && (!Number.isSafeInteger(Number(data.tmdbId)) || Number(data.tmdbId) < 1)) throw new ApiError("Choose a movie for automatic trailer discovery.");
 
-  const result = await Promise.allSettled(unique.map(async source => {
-    if(source==="tmdb"){
-      const {reviews,hasMore}=await tmdbReviews(Number(data.tmdbId),max);
-      return {source,hasMore,comments:reviews,category:"film",
-        summary:summary(reviews,"author_rating")};
-    }
-    const movie=await getSelectedMovie(data.tmdbId);
-    const matched=await discoverYouTubeTrailer(movie);
-    const {reviews,hasMore}=await youtubeComments(matched.videoId,max);
-    return {source,hasMore,comments:reviews,category:"trailer",
-      matchedSource:matched,
-      summary:summary(reviews,"none")};
-  }));
+  const result = await Promise.allSettled(unique.map(source =>
+    withSharedSourceCache(Number(data.tmdbId),source,max,async()=>{
+      if(source==="tmdb"){
+        const {reviews,hasMore}=await tmdbReviews(Number(data.tmdbId),max);
+        return {source,hasMore,comments:reviews,category:"film",
+          summary:summary(reviews,"author_rating")};
+      }
+      const movie=await getSelectedMovie(data.tmdbId);
+      const matched=await discoverYouTubeTrailer(movie);
+      const {reviews,hasMore}=await youtubeComments(matched.videoId,max);
+      return {source,hasMore,comments:reviews,category:"trailer",
+        matchedSource:matched,summary:summary(reviews,"none")};
+    })
+  ));
   const successes = [], errors = [];
   result.forEach((entry, index) => {
     if (entry.status === "fulfilled") successes.push(entry.value);
