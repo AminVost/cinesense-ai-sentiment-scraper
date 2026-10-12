@@ -1,0 +1,39 @@
+name: CineSense MySQL integration
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "movie-scraper/lib/**"
+      - "movie-scraper/db/**"
+      - "movie-scraper/test/mysql-integration.mjs"
+      - ".github/workflows/mysql-integration.yml"
+permissions: {contents: read}
+jobs:
+  mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testrootonly
+          MYSQL_DATABASE: cinesense_ci
+          MYSQL_USER: cinesense_ci
+          MYSQL_PASSWORD: testing_mysql
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ptestrootonly"
+          --health-interval=5s --health-timeout=3s --health-retries=15
+    env:
+      DATABASE_URL: mysql://cinesense_ci:testing_mysql@127.0.0.1:3306/cinesense_ci
+      DATABASE_TLS_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: npm ci --no-audit --no-fund
+        working-directory: movie-scraper
+      - name: Real concurrent MySQL cache and session tests
+        working-directory: movie-scraper
+        run: node --test test/mysql-integration.mjs
