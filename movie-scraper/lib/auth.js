@@ -1,4 +1,3 @@
-import "server-only";
 import {randomBytes,createHash,scrypt as scryptCb,timingSafeEqual} from "node:crypto";
 import {promisify} from "node:util";
 import {database,dbReady,sql} from "./db.js";
