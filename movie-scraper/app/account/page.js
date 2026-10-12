@@ -52,7 +52,7 @@ export default function AccountPage(){
         setMessage(data.message);setPassword("");
       }else if(tab==="verify"||tab==="reset"){
         const endpoint=tab==="verify"?"/api/auth/verify":"/api/auth/reset";
-        const data=await requestApi(endpoint,{token,...(tab==="reset"?{password}:{})});
+        const data=await requestApi(endpoint,{token,password});
         setMessage(data.message);
         setPassword("");setToken("");
         setTimeout(()=>choose("login"),1500);
@@ -108,8 +108,8 @@ export default function AccountPage(){
           {!["verify","reset"].includes(tab)&&<label>ایمیل
             <input autoComplete="email" type="email" dir="ltr" required maxLength={254} value={email}
               onChange={e=>setEmail(e.target.value)}/></label>}
-          {["login","register","reset"].includes(tab)&&<label>رمز عبور
-            <input autoComplete={tab==="login"?"current-password":"new-password"} type="password"
+          {["login","register","reset","verify"].includes(tab)&&<label>رمز عبور
+            <input autoComplete={tab==="login"||tab==="verify"?"current-password":"new-password"} type="password"
               required minLength={tab==="login"?1:12} maxLength={128} value={password}
               onChange={e=>setPassword(e.target.value)}/></label>}
           {error&&<p role="alert" className="ac-error">{error}</p>}
