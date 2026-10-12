@@ -35,10 +35,18 @@ export async function cachedMovieSource(tmdbId, source, maxComments, load) {
         expiresAt:new Date(rows[0].expires_at).toISOString()}
     };
   }
+  function onDatabaseFailure(e){
+    console.error("[shared-cache] MySQL unavailable:",e?.code||e?.name);
+    // Fail CLOSED for costly APIs when an explicitly connected database is
+    // unavailable, otherwise attackers could bypass durable daily quotas.
+    if(source!=="tmdb"){
+      const issue=new Error("حافظه مشترک موقتاً در دسترس نیست؛ بعداً دوباره امتحان کنید.");
+      issue.status=503;issue.publicMessage=true;throw issue;
+    }
+  }
   let cached;
   try {cached=await snapshot();} catch(e) {
-    console.error("[shared-cache] MySQL read unavailable:",e?.code||e?.name);
-    // Fail open: current public sources remain usable if MySQL has an outage.
+    onDatabaseFailure(e);
     return {data:await load(),cache:{status:"db_unavailable"}};
   }
   if (cached) return cached;
@@ -57,7 +65,7 @@ export async function cachedMovieSource(tmdbId, source, maxComments, load) {
   }
   let acquired=false;
   try {acquired=await claim();} catch(e) {
-    console.error("[shared-cache] MySQL lock unavailable:",e?.code||e?.name);
+    onDatabaseFailure(e);
     return {data:await load(),cache:{status:"db_unavailable"}};
   }
   if(!acquired) {
