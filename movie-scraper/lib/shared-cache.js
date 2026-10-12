@@ -18,15 +18,19 @@ export async function cachedMovieSource(tmdbId, source, maxComments, load) {
     const rows=await sql(
       `SELECT payload_json, fetched_count, fetched_at, expires_at
          FROM cs_source_cache WHERE tmdb_id=? AND source=?
-         AND expires_at>UTC_TIMESTAMP(3) AND fetched_count>=? LIMIT 1`,
-      [tmdbId,source,maxComments]
+         AND expires_at>UTC_TIMESTAMP(3) LIMIT 1`,
+      [tmdbId,source]
     );
     if (!rows.length) return null;
     let data;
     try {data=JSON.parse(rows[0].payload_json);} catch {return null;}
     if (!data || !Array.isArray(data.comments)) return null;
+    // A complete source with fewer public comments than requested is still a
+    // cache hit. A truncated requested subset has additional saved comments.
+    if (Number(rows[0].fetched_count)<maxComments && data.hasMore!==false) return null;
     return {
-      data:{...data,comments:data.comments.slice(0,maxComments)},
+      data:{...data,comments:data.comments.slice(0,maxComments),
+        hasMore:data.comments.length>maxComments||Boolean(data.hasMore)},
       cache:{status:"hit",fetchedAt:new Date(rows[0].fetched_at).toISOString(),
         expiresAt:new Date(rows[0].expires_at).toISOString()}
     };
