@@ -57,7 +57,7 @@ test("same film+source concurrent requests only perform one upstream fetch",asyn
 });
 test("different comment page sizes trigger a new upstream request when necessary",async()=>{
   let calls=0;
-  const loader=async()=>{calls++;return {source:"tmdb",category:"film",comments:Array.from({length:10},(_,i)=>({id:String(i),text:"Review "+i})),hasMore:false};};
+  const loader=async()=>{calls++;return {source:"tmdb",category:"film",comments:Array.from({length:10},(_,i)=>({id:String(i),text:"Review "+i})),hasMore:calls===1};};
   await cachedMovieSource(991227,"tmdb",5,loader);
   await cachedMovieSource(991227,"tmdb",10,loader);
   const sliced=await cachedMovieSource(991227,"tmdb",3,loader);
@@ -93,3 +93,13 @@ test("MySQL cleanup of expired source cache is safe",async()=>{
 });
 
 test.after(async()=>{await database().end();});
+
+test("a complete movie source remains cached for any larger requested limit",async()=>{
+  let calls=0;
+  const loader=async()=>{calls++;return{source:"tmdb",category:"film",comments:[{id:"only1",text:"Only review"}],hasMore:false};};
+  await cachedMovieSource(991228,"tmdb",3,loader);
+  const again=await cachedMovieSource(991228,"tmdb",20,loader);
+  assert.equal(calls,1);
+  assert.equal(again.data.comments.length,1);
+  assert.equal(again.cache.status,"hit");
+});
