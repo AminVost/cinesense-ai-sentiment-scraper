@@ -1,4 +1,3 @@
-import "server-only";
 import { randomBytes } from "node:crypto";
 import { dbReady, sql } from "./db.js";
 import {sharedRateLimit} from "./db-rate.js";
