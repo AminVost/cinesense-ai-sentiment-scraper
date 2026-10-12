@@ -2,6 +2,7 @@ import { jsonError, readInput } from "../../../lib/vercel-api";
 import { isAuthorizedScrape, scraperEnabled } from "../../../lib/scraper-access";
 import { discoverAndScrapeDigiMoviez } from "../../../lib/digimoviez";
 import { unstable_cache } from "next/cache";
+import { withSharedSourceCache, databaseEnabled } from "../../../lib/shared-cache";
 import { acquireSlot, consumeLimit, limitResponse, requesterKey } from "../../../lib/request-guard";
 
 export const runtime = "nodejs";
@@ -41,10 +42,14 @@ export async function POST(request) {
         status:503,headers:{"Retry-After":"10","Cache-Control":"no-store"}
       });
 
-    const extracted = await cachedScrape(Number(input.tmdbId), max);
+    const extracted = await withSharedSourceCache(Number(input.tmdbId),"digimoviez",max,async()=>{
+      const result = await cachedScrape(Number(input.tmdbId), max);
+      return {comments: result.reviews, matchedSource: result.matchedSource, hasMore: result.hasMore};
+    });
     return Response.json({
-      comments: extracted.reviews, matchedSource: extracted.matchedSource,
-      hasMore: extracted.hasMore, totalComments: extracted.reviews.length,
+      comments: extracted.comments, matchedSource: extracted.matchedSource,
+      cacheStatus: extracted.cacheStatus, lastFetchedAt: extracted.lastFetchedAt,
+      hasMore: extracted.hasMore, totalComments: extracted.comments.length,
     }, {headers:{"Cache-Control":"no-store"}});
   } catch(error) {
     return jsonError(error);
