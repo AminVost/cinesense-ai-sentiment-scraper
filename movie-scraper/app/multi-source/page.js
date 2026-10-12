@@ -108,6 +108,17 @@ export default function MultiSourcePage(){
     },450);
     return ()=>{clearTimeout(timer);controller.abort();};
   },[query,providers]);
+  useEffect(()=>{
+    const id=Number(new URLSearchParams(window.location.search).get("movie"));
+    if(!Number.isSafeInteger(id)||id<1||id>1_000_000_000)return;
+    const controller=new AbortController();
+    fetch("/api/movie?tmdbId="+id,{signal:controller.signal})
+      .then(r=>r.ok?r.json():Promise.reject(Error("Movie not found")))
+      .then(data=>{if(!controller.signal.aborted&&data.movie){
+        setSelectedMovie(data.movie);setQuery(data.movie.title);
+      }}).catch(()=>{});
+    return ()=>controller.abort();
+  },[]);
   function resetAnalysis(){
     workerRef.current?.terminate();workerRef.current=null;runId.current++;
     setAiBusy(false);setAiError("");setAiProgress("");setAiResults({});setAiComplete(false);
