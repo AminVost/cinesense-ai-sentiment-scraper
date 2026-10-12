@@ -1,0 +1,33 @@
+name: Generate verified MySQL dependency lockfile
+on:
+  push:
+    branches: [feat/mysql-auth-shared-cache]
+    paths: [.github/workflows/generate-mysql-lock.yml]
+permissions:
+  contents: write
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/mysql-auth-shared-cache
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: movie-scraper/package-lock.json
+      - name: Generate lockfile using the official npm registry
+        working-directory: movie-scraper
+        run: npm install mysql2@3.15.3 --save-exact --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Commit reproducible lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add movie-scraper/package.json movie-scraper/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build: lock mysql2 3.15.3 and transitive dependencies"
+            git push origin HEAD:feat/mysql-auth-shared-cache
+          fi
